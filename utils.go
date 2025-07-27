@@ -1,16 +1,20 @@
 package templig
 
-import "fmt"
+import (
+	"fmt"
+)
 
-// wrapError returns a formatted error with the given text if an error is provided, otherwise it returns nil.
+// wrapError wraps an existing error with the provided text.
+// It returns nil if `err` is nil, or the original `err` if `text` is empty.
+// Otherwise, it returns a new error with the format "text: original_error".
 func wrapError(text string, err error) error {
-	if len(text) == 0 {
-		text = "%w"
+	if err == nil {
+		return nil
 	}
 
-	if err != nil {
-		return fmt.Errorf(text, err) //nolint:err113
+	if text == "" {
+		return err
 	}
 
-	return nil
+	return fmt.Errorf("%s: %w", text, err)
 }

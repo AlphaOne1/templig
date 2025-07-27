@@ -401,5 +401,6 @@ plain text to any location.
         - '****************'
       ```
 
-Single passwords are always replaced by a string of `*` of equal length.
+Single secrets are always replaced by a string of `*` of equal length until a length of 32. Secrets longer than 32
+characters are replaced by a string of `**` followed by the number of characters and a final `**`, e.g. `**42**`.
 An example usage can be found [here](examples/templating/env).

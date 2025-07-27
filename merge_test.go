@@ -10,6 +10,8 @@ import (
 )
 
 func TestMerge(t *testing.T) {
+	t.Parallel()
+
 	tests := []struct {
 		name    string
 		a       string
@@ -113,54 +115,60 @@ a: &ref1
 	}
 
 	for testNum, test := range tests {
-		var nodeA yaml.Node
-		var nodeB yaml.Node
+		t.Run(test.name, func(t *testing.T) {
+			t.Parallel()
 
-		test.want += "\n"
+			var nodeA yaml.Node
+			var nodeB yaml.Node
 
-		if aErr := yaml.Unmarshal([]byte(test.a), &nodeA); aErr != nil {
-			t.Errorf("%v - %v: could not unmarshal a: %v", testNum, test.name, aErr)
-		}
+			test.want += "\n"
 
-		if bErr := yaml.Unmarshal([]byte(test.b), &nodeB); bErr != nil {
-			t.Errorf("%v - %v: could not unmarshal b: %v", testNum, test.name, bErr)
-		}
+			if aErr := yaml.Unmarshal([]byte(test.a), &nodeA); aErr != nil {
+				t.Errorf("%v - %v: could not unmarshal a: %v", testNum, test.name, aErr)
+			}
 
-		result, resultErr := templig.MergeYAMLNodes(&nodeA, &nodeB)
+			if bErr := yaml.Unmarshal([]byte(test.b), &nodeB); bErr != nil {
+				t.Errorf("%v - %v: could not unmarshal b: %v", testNum, test.name, bErr)
+			}
 
-		if !test.wantErr && resultErr != nil {
-			t.Errorf("%v - %v: could not merge: %v", testNum, test.name, resultErr)
+			result, resultErr := templig.MergeYAMLNodes(&nodeA, &nodeB)
 
-			continue
-		}
+			if !test.wantErr && resultErr != nil {
+				t.Errorf("%v - %v: could not merge: %v", testNum, test.name, resultErr)
 
-		if test.wantErr && resultErr == nil {
-			t.Errorf("%v - %v: should not have been able to merge", testNum, test.name)
+				return
+			}
 
-			continue
-		}
+			if test.wantErr && resultErr == nil {
+				t.Errorf("%v - %v: should not have been able to merge", testNum, test.name)
 
-		if resultErr != nil {
-			continue
-		}
+				return
+			}
 
-		buf := bytes.Buffer{}
+			if resultErr != nil {
+				return
+			}
 
-		buf.Reset()
+			buf := bytes.Buffer{}
 
-		if err := yaml.NewEncoder(&buf).Encode(result.Content[0]); err != nil {
-			t.Errorf("%v - %v: could not marshal document to yaml: %v",
-				testNum, test.name, err)
-		}
+			buf.Reset()
 
-		if buf.String() != test.want {
-			t.Errorf("%v - %v: result mismatch, wanted:\n%v\nbut got:\n%v",
-				testNum, test.name, test.want, buf.String())
-		}
+			if err := yaml.NewEncoder(&buf).Encode(result.Content[0]); err != nil {
+				t.Errorf("%v - %v: could not marshal document to yaml: %v",
+					testNum, test.name, err)
+			}
+
+			if buf.String() != test.want {
+				t.Errorf("%v - %v: result mismatch, wanted:\n%v\nbut got:\n%v",
+					testNum, test.name, test.want, buf.String())
+			}
+		})
 	}
 }
 
 func TestStrangeDocumentNodes(t *testing.T) {
+	t.Parallel()
+
 	nodeA := yaml.Node{
 		Kind: yaml.DocumentNode,
 	}
@@ -185,6 +193,8 @@ func TestStrangeDocumentNodes(t *testing.T) {
 }
 
 func TestUnknownNodeKind(t *testing.T) {
+	t.Parallel()
+
 	a := yaml.Node{
 		Kind: 0,
 	}

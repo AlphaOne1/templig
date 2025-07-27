@@ -7,6 +7,8 @@ import (
 )
 
 func TestNullArgs(t *testing.T) {
+	t.Parallel()
+
 	mergeFuncs := []func(*yaml.Node, *yaml.Node) (*yaml.Node, error){
 		MergeYAMLNodes,
 		mergeAliasNodes,
@@ -30,6 +32,8 @@ func TestNullArgs(t *testing.T) {
 }
 
 func TestMismatchArgs(t *testing.T) {
+	t.Parallel()
+
 	mergeFuncs := []func(*yaml.Node, *yaml.Node) (*yaml.Node, error){
 		MergeYAMLNodes,
 		mergeAliasNodes,

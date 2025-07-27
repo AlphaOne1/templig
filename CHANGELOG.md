@@ -1,3 +1,10 @@
+Release 0.8.2
+=============
+
+- documentation clarification for `Config.Get`
+- dependency updates
+- redacted code using AI to point out potential
+
 Release 0.8.1
 =============
 
