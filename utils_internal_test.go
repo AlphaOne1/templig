@@ -45,18 +45,18 @@ func TestWrapError(t *testing.T) {
 		},
 	}
 
-	for testIndex, v := range tests {
+	for testIndex, test := range tests {
 		t.Run(fmt.Sprintf("WrapError-%d", testIndex), func(t *testing.T) {
 			t.Parallel()
 
-			got := wrapError(v.text, v.err)
+			got := wrapError(test.text, test.err)
 
-			if (got != nil) != v.wantErr {
-				t.Errorf(`%v: got error "%v", but wanted "%v"`, testIndex, got, v.wantErr)
+			if (got != nil) != test.wantErr {
+				t.Errorf(`%test: got error "%test", but wanted "%test"`, testIndex, got, test.wantErr)
 			}
 
-			if v.wantErr && got.Error() != v.wantErrMsg {
-				t.Errorf(`%v: got error "%v" but wanted "%v"`, testIndex, got.Error(), v.wantErrMsg)
+			if test.wantErr && got.Error() != test.wantErrMsg {
+				t.Errorf(`%test: got error "%test" but wanted "%test"`, testIndex, got.Error(), test.wantErrMsg)
 			}
 		})
 	}
