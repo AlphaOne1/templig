@@ -18,7 +18,8 @@ import (
 
 // TemplateFunctions is a template.FuncMap that allows to globally remove the additional templig template functions or
 // even add own functions on top of what is already provided. For user-provided functions, please use the prefix `uP`,
-// that is guaranteed to never be used as a templig provided function.
+// that is guaranteed to never be used as a templig provided function. Access to this variable
+// is not synchronized, thus modifying it shall be done before working with templig.
 var TemplateFunctions = template.FuncMap{ //nolint:gochecknoglobals
 	"arg":      argumentValue,
 	"hasArg":   argumentPresent,
@@ -61,12 +62,18 @@ func readFile(fileName string) (any, error) {
 	return string(content), readErr
 }
 
-func argumentValue(name string) (any, error) {
-	index := slices.IndexFunc(os.Args, func(s string) bool {
+func argumentIndexMatch(name string) func(string) bool {
+	return func(s string) bool {
 		tmp := strings.TrimLeft(s, "-")
 
-		return len(tmp) != len(s) && strings.HasPrefix(tmp, name)
-	})
+		return len(tmp) != len(s) &&
+			(tmp == name ||
+				len(tmp) > len(name) && strings.HasPrefix(tmp, name) && tmp[len(name)] == '=')
+	}
+}
+
+func argumentValue(name string) (any, error) {
+	index := slices.IndexFunc(os.Args, argumentIndexMatch(name))
 
 	// handle arguments that give the value using assignment
 	if index >= 0 && strings.Contains(os.Args[index], "=") {
@@ -91,11 +98,7 @@ func argumentValue(name string) (any, error) {
 }
 
 func argumentPresent(name string) (any, error) {
-	index := slices.IndexFunc(os.Args, func(s string) bool {
-		tmp := strings.TrimLeft(s, "-")
-
-		return tmp != s && strings.HasPrefix(tmp, name)
-	})
+	index := slices.IndexFunc(os.Args, argumentIndexMatch(name))
 
 	if index >= 0 {
 		return true, nil
