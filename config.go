@@ -37,7 +37,8 @@ type Config[T any] struct {
 	content T
 }
 
-// Get gives a pointer to the deserialized configuration.
+// Get gives a pointer to the deserialized configuration. Get does not load the configuration anew and
+// is principally inexpensive to call.
 func (c *Config[T]) Get() *T {
 	return &c.content
 }
@@ -164,7 +165,7 @@ func From[T any](readers ...io.Reader) (*Config[T], error) {
 
 // To writes a configuration to the given io.Writer.
 func (c *Config[T]) To(w io.Writer) error {
-	return wrapError("could not encode configuration: %w", yaml.NewEncoder(w).Encode(&c.content))
+	return wrapError("could not encode configuration", yaml.NewEncoder(w).Encode(&c.content))
 }
 
 // ToSecretsHidden writes the configuration to the given io.Writer and hides secret values using the [SecretRE].
@@ -250,7 +251,7 @@ func FromFile[T any](paths ...string) (*Config[T], error) {
 
 		config, decodeErr = fromSingle[T](f)
 	} else {
-		for _, addOn := range paths[0:] {
+		for _, addOn := range paths {
 			aErr := config.overlayFile(addOn)
 
 			if aErr != nil {

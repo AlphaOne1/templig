@@ -264,85 +264,97 @@ func TestReadConfig(t *testing.T) {
 			args:    []string{"--param0"},
 			wantErr: false,
 		},
+		{ // 19
+			in: `
+                id:   23
+                name: {{ if hasArg "param0" }} "have" {{ else }} "have not" {{ end }}`,
+			want: TestConfig{
+				ID:   23,
+				Name: "have not",
+			},
+			args:    []string{"--param00"},
+			wantErr: false,
+		},
 	}
 
-	testBuf := bytes.Buffer{}
-
 	for testIndex, test := range tests {
-		if len(test.in) > 0 && len(test.inFile) > 0 {
-			t.Errorf("%v: input data and file given at the same time", testIndex)
-		}
+		t.Run(fmt.Sprintf("TestReadConfig-%d", testIndex), func(t *testing.T) {
+			testBuf := bytes.Buffer{}
 
-		testBuf.Reset()
-		testBuf.WriteString(test.in)
-
-		if test.env != nil {
-			for ei, ev := range test.env {
-				t.Setenv(ei, ev)
+			if len(test.in) > 0 && len(test.inFile) > 0 {
+				t.Errorf("%v: input data and file given at the same time", testIndex)
 			}
-		}
 
-		if test.args != nil {
-			os.Args = append(os.Args, test.args...)
-		}
+			testBuf.WriteString(test.in)
 
-		var config *templig.Config[TestConfig]
-		var fromErr error
-
-		switch {
-		case len(test.in) > 0:
-			config, fromErr = templig.From[TestConfig](&testBuf)
-		case len(test.inFile) > 0:
-			config, fromErr = templig.FromFile[TestConfig](test.inFile)
-		default:
-			t.Errorf("%v: neither input data nor input file given", testIndex)
-		}
-
-		if test.wantErr && fromErr == nil {
-			t.Errorf("%v: wanted error but got nil", testIndex)
-		}
-		if !test.wantErr && fromErr != nil {
-			t.Errorf("%v: did not want error but got %v", testIndex, fromErr)
-		}
-
-		if config != nil {
-			if config.Get().ID != test.want.ID {
-				t.Errorf("%v: wanted ID %v but got %v", testIndex, test.want.ID, config.Get().ID)
-			}
-			if config.Get().Name != test.want.Name {
-				t.Errorf("%v: wanted Name %v but got %v", testIndex, test.want.Name, config.Get().Name)
-			}
-			if (config.Get().Conn != nil) != (test.want.Conn != nil) {
-				t.Errorf("%v: wanted Conn == nil -> %v but got %v", testIndex,
-					test.want.Conn != nil,
-					config.Get().Conn != nil)
-			}
-			if config.Get().Conn != nil && test.want.Conn != nil {
-				if config.Get().Conn.URL != test.want.Conn.URL {
-					t.Errorf("%v: wanted URL %v but got %v", testIndex, test.want.Conn.URL, config.Get().Conn.URL)
+			if test.env != nil {
+				for ei, ev := range test.env {
+					t.Setenv(ei, ev)
 				}
-				for _, p := range test.want.Conn.Passes {
-					if !slices.Contains(config.Get().Conn.Passes, p) {
-						t.Errorf("%v: wanted passes to containt %v but was not there", testIndex, p)
+			}
+
+			if test.args != nil {
+				os.Args = append(os.Args, test.args...)
+			}
+
+			var config *templig.Config[TestConfig]
+			var fromErr error
+
+			switch {
+			case len(test.in) > 0:
+				config, fromErr = templig.From[TestConfig](&testBuf)
+			case len(test.inFile) > 0:
+				config, fromErr = templig.FromFile[TestConfig](test.inFile)
+			default:
+				t.Errorf("%v: neither input data nor input file given", testIndex)
+			}
+
+			if test.wantErr && fromErr == nil {
+				t.Errorf("%v: wanted error but got nil", testIndex)
+			}
+			if !test.wantErr && fromErr != nil {
+				t.Errorf("%v: did not want error but got %v", testIndex, fromErr)
+			}
+
+			if config != nil {
+				if config.Get().ID != test.want.ID {
+					t.Errorf("%v: wanted ID %v but got %v", testIndex, test.want.ID, config.Get().ID)
+				}
+				if config.Get().Name != test.want.Name {
+					t.Errorf("%v: wanted Name %v but got %v", testIndex, test.want.Name, config.Get().Name)
+				}
+				if (config.Get().Conn != nil) != (test.want.Conn != nil) {
+					t.Errorf("%v: wanted Conn == nil -> %v but got %v", testIndex,
+						test.want.Conn != nil,
+						config.Get().Conn != nil)
+				}
+				if config.Get().Conn != nil && test.want.Conn != nil {
+					if config.Get().Conn.URL != test.want.Conn.URL {
+						t.Errorf("%v: wanted URL %v but got %v", testIndex, test.want.Conn.URL, config.Get().Conn.URL)
+					}
+					for _, p := range test.want.Conn.Passes {
+						if !slices.Contains(config.Get().Conn.Passes, p) {
+							t.Errorf("%v: wanted passes to containt %v but was not there", testIndex, p)
+						}
+					}
+					for _, p := range config.Get().Conn.Passes {
+						if !slices.Contains(test.want.Conn.Passes, p) {
+							t.Errorf("%v: found pass %v but should not there", testIndex, p)
+						}
 					}
 				}
-				for _, p := range config.Get().Conn.Passes {
-					if !slices.Contains(test.want.Conn.Passes, p) {
-						t.Errorf("%v: found pass %v but should not there", testIndex, p)
-					}
+			}
+
+			if test.env != nil {
+				for ei := range test.env {
+					_ = os.Unsetenv(ei)
 				}
 			}
-		}
 
-		if test.env != nil {
-			for ei := range test.env {
-				_ = os.Unsetenv(ei)
+			if len(test.args) > 0 {
+				os.Args = os.Args[:len(os.Args)-len(test.args)]
 			}
-		}
-
-		if len(test.args) > 0 {
-			os.Args = os.Args[:len(os.Args)-len(test.args)]
-		}
+		})
 	}
 }
 
