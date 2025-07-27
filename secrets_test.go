@@ -255,6 +255,8 @@ func TestHideSecrets(t *testing.T) {
 
 	for testNum, test := range tests {
 		t.Run(fmt.Sprintf("HideSecrets-%d", testNum), func(t *testing.T) {
+			t.Parallel()
+
 			gotBuf := bytes.Buffer{}
 			wantBuf := bytes.Buffer{}
 
@@ -263,6 +265,7 @@ func TestHideSecrets(t *testing.T) {
 
 			if encodeErr != nil {
 				t.Errorf("%v: could not encode value", testNum)
+
 				return
 			}
 

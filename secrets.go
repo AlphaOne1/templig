@@ -110,10 +110,12 @@ func hideSecrets(node *yaml.Node) []secretWorkItem {
 
 // hideAll processes a YAML node to mask sensitive data. Hides structure based on `hideStructure` when true.
 func hideAll(node *yaml.Node, hideStructure bool) []secretWorkItem {
+	const secretLengthCutoff = 32
+
 	switch node.Kind {
 	case yaml.ScalarNode:
 		node.Tag = "!!str"
-		if len(node.Value) < 32 {
+		if len(node.Value) < secretLengthCutoff {
 			node.Value = strings.Repeat("*", len(node.Value))
 		} else {
 			node.Value = fmt.Sprintf("**%d**", len(node.Value))
