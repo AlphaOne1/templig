@@ -85,7 +85,7 @@ func mergeAliasNodes(nodeA, nodeB *yaml.Node) (*yaml.Node, error) {
 		return nil, ErrNodeNil
 	}
 
-	if nodeA.Kind != yaml.AliasNode {
+	if nodeA.Kind != yaml.AliasNode || nodeA.Alias == nil {
 		return nil, ErrAliasNodeExpected
 	}
 
