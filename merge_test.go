@@ -116,6 +116,8 @@ a: &ref1
 
 	for testNum, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
+			t.Parallel()
+
 			var nodeA yaml.Node
 			var nodeB yaml.Node
 
