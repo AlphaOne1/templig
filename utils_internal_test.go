@@ -52,11 +52,11 @@ func TestWrapError(t *testing.T) {
 			got := wrapError(test.text, test.err)
 
 			if (got != nil) != test.wantErr {
-				t.Errorf(`%test: got error "%test", but wanted "%test"`, testIndex, got, test.wantErr)
+				t.Errorf(`got error "%v", but wanted "%v"`, got, test.wantErr)
 			}
 
 			if test.wantErr && got.Error() != test.wantErrMsg {
-				t.Errorf(`%test: got error "%test" but wanted "%test"`, testIndex, got.Error(), test.wantErrMsg)
+				t.Errorf(`got error "%v" but wanted "%v"`, got.Error(), test.wantErrMsg)
 			}
 		})
 	}
