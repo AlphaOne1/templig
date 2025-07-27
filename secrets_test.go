@@ -5,6 +5,10 @@ package templig_test
 
 import (
 	"bytes"
+	"fmt"
+	"regexp"
+	"strconv"
+	"strings"
 	"testing"
 
 	"gopkg.in/yaml.v3"
@@ -12,7 +16,47 @@ import (
 	"github.com/AlphaOne1/templig"
 )
 
+func TestDefaultSecretRE(t *testing.T) {
+	t.Parallel()
+
+	tests := []struct {
+		in    string
+		match bool
+	}{
+		// 0
+		{in: "hello", match: false},
+		// 1
+		{in: "secret", match: true},
+		// 2
+		{in: "pass", match: true},
+		// 3
+		{in: "passWord", match: true},
+		// 4
+		{in: "passWor", match: true},
+		// 5
+		{in: "past", match: false},
+		// 6
+		{in: "CeRtIfIcAtE", match: true},
+	}
+
+	SecretRE := regexp.MustCompile(templig.SecretDefaultRE)
+
+	for k, v := range tests {
+		t.Run(fmt.Sprintf("DefaultSecretRE-%d", k), func(t *testing.T) {
+			t.Parallel()
+
+			match := SecretRE.MatchString(v.in)
+
+			if match != v.match {
+				t.Errorf("expected %v to match secret, but got %v", v.in, match)
+			}
+		})
+	}
+}
+
 func TestHideSecrets(t *testing.T) {
+	t.Parallel()
+
 	tests := []struct {
 		in            any
 		want          any
@@ -131,46 +175,124 @@ func TestHideSecrets(t *testing.T) {
 			},
 			hideStructure: false,
 		},
+		{ // 10
+			in: map[string]any{
+				"connections": map[string]any{
+					"user": "us",
+					"secrets": func() []string {
+						result := make([]string, 0, 103)
+
+						for i := range cap(result) {
+							result = append(result, "*"+strconv.Itoa(i))
+						}
+
+						return result
+					}(),
+				},
+			},
+			want: map[string]any{
+				"connections": map[string]any{
+					"user": "us",
+					"secrets": func() []string {
+						result := make([]string, 0, 103)
+
+						for i := range cap(result) {
+							result = append(result, strings.Repeat("*", len(strconv.Itoa(i))+1))
+						}
+
+						return result
+					}(),
+				},
+			},
+			hideStructure: false,
+		},
+		{ // 11
+			in: map[string]any{
+				"connections": map[string]any{
+					"user":    "us",
+					"secrets": nil,
+				},
+			},
+			want: map[string]any{
+				"connections": map[string]any{
+					"user":    "us",
+					"secrets": "****",
+				},
+			},
+			hideStructure: false,
+		},
+		{ // 12
+			in: map[string]any{
+				"connections": map[string]any{
+					"user":    "us",
+					"secrets": []any{"pass", nil},
+				},
+			},
+			want: map[string]any{
+				"connections": map[string]any{
+					"user":    "us",
+					"secrets": []string{"****", "****"},
+				},
+			},
+			hideStructure: false,
+		},
+		{ // 13
+			in: map[string]any{
+				"connections": map[string]any{
+					"user":    "us",
+					"secrets": []string{"*12345678911234567892123456789312"},
+				},
+			},
+			want: map[string]any{
+				"connections": map[string]any{
+					"user":    "us",
+					"secrets": []string{"**33**"},
+				},
+			},
+			hideStructure: false,
+		},
 	}
 
-	gotBuf := bytes.Buffer{}
-	wantBuf := bytes.Buffer{}
-
 	for testNum, test := range tests {
-		node := yaml.Node{}
-		encodeErr := node.Encode(test.in)
+		t.Run(fmt.Sprintf("HideSecrets-%d", testNum), func(t *testing.T) {
+			gotBuf := bytes.Buffer{}
+			wantBuf := bytes.Buffer{}
 
-		if encodeErr != nil {
-			t.Errorf("%v: could not encode value", testNum)
+			node := yaml.Node{}
+			encodeErr := node.Encode(test.in)
 
-			continue
-		}
+			if encodeErr != nil {
+				t.Errorf("%v: could not encode value", testNum)
+				return
+			}
 
-		templig.HideSecrets(&node, test.hideStructure)
+			templig.HideSecrets(&node, test.hideStructure)
 
-		if err := yaml.NewEncoder(&gotBuf).Encode(&node); err != nil {
-			t.Errorf("%v: Got error serializing got", testNum)
-		}
-		if err := yaml.NewEncoder(&wantBuf).Encode(test.want); err != nil {
-			t.Errorf("%v: Got error serializing want", testNum)
-		}
+			if err := yaml.NewEncoder(&gotBuf).Encode(&node); err != nil {
+				t.Errorf("%v: Got error serializing got", testNum)
+			}
+			if err := yaml.NewEncoder(&wantBuf).Encode(test.want); err != nil {
+				t.Errorf("%v: Got error serializing want", testNum)
+			}
 
-		if gotBuf.String() != wantBuf.String() {
-			t.Errorf("%v: got %v\nbut wanted %v", testNum, gotBuf.String(), wantBuf.String())
-		}
-
-		gotBuf.Reset()
-		wantBuf.Reset()
+			if gotBuf.String() != wantBuf.String() {
+				t.Errorf("%v: got %v\nbut wanted %v", testNum, gotBuf.String(), wantBuf.String())
+			}
+		})
 	}
 }
 
-func TestHideSecretsNil( /* t */ *testing.T) {
+func TestHideSecretsNil(t *testing.T) {
+	t.Parallel()
+
 	var a *yaml.Node
 
 	templig.HideSecrets(a, true)
 }
 
 func TestHideSecretAlias(t *testing.T) {
+	t.Parallel()
+
 	input := `
 open: &ref |-
     value
