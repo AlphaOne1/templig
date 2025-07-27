@@ -2,34 +2,43 @@ package templig
 
 import (
 	"errors"
+	"fmt"
 	"testing"
 )
 
 func TestWrapError(t *testing.T) {
+	t.Parallel()
+
 	tests := []struct {
-		text       string
 		err        error
+		text       string
 		wantErr    bool
 		wantErrMsg string
 	}{
 		{ // 0
-			text:       "wrap this: %v",
+			text:       "wrap this",
 			err:        errors.New("original error"),
 			wantErr:    true,
 			wantErrMsg: "wrap this: original error",
 		},
 		{ // 1
-			text:    "wrap this: %v",
+			text:       "wrap that: %w",
+			err:        errors.New("original error"),
+			wantErr:    true,
+			wantErrMsg: "wrap that: %w: original error",
+		},
+		{ // 2
+			text:    "wrap this",
 			err:     nil,
 			wantErr: false,
 		},
-		{ // 2
+		{ // 3
 			text:       "",
 			err:        errors.New("error case"),
 			wantErr:    true,
 			wantErrMsg: "error case",
 		},
-		{
+		{ // 4
 			text:    "",
 			err:     nil,
 			wantErr: false,
@@ -37,14 +46,18 @@ func TestWrapError(t *testing.T) {
 	}
 
 	for k, v := range tests {
-		got := wrapError(v.text, v.err)
+		t.Run(fmt.Sprintf("WrapError-%d", k), func(t *testing.T) {
+			t.Parallel()
 
-		if (got != nil) != v.wantErr {
-			t.Errorf(`%v: got error "%v", but wanted "%v"`, k, got, v.wantErr)
-		}
+			got := wrapError(v.text, v.err)
 
-		if v.wantErr && got.Error() != v.wantErrMsg {
-			t.Errorf(`%v: got error "%v" but wanted "%v"`, k, got.Error(), v.wantErrMsg)
-		}
+			if (got != nil) != v.wantErr {
+				t.Errorf(`%v: got error "%v", but wanted "%v"`, k, got, v.wantErr)
+			}
+
+			if v.wantErr && got.Error() != v.wantErrMsg {
+				t.Errorf(`%v: got error "%v" but wanted "%v"`, k, got.Error(), v.wantErrMsg)
+			}
+		})
 	}
 }
