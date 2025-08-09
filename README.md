@@ -1,4 +1,4 @@
-<!-- markdownlint-disable MD013 MD033 -->
+<!-- markdownlint-disable MD013 MD033 MD041 -->
 <p align="center">
     <img src="templig_logo.svg" width="25%" alt="Logo"><br>
     <a href="https://github.com/AlphaOne1/templig/actions/workflows/test.yml"
@@ -68,7 +68,7 @@
              alt="GoDoc Reference">
     </a>
 </p>
-<!-- markdownlint-enable MD013 MD033 -->
+<!-- markdownlint-enable MD013 MD033 MD041 -->
 
 templig
 =======
