@@ -30,6 +30,12 @@
         <img src="https://codecov.io/github/AlphaOne1/templig/graph/badge.svg?token=P18EOCUPU8"
              alt="Code Coverage">
     </a>
+    <a href="https://img.shields.io/coderabbit/prs/github/AlphaOne1/templig"
+       rel="external"
+       target="_blank">
+        <img src="https://img.shields.io/coderabbit/prs/github/AlphaOne1/templig"
+             alt="CodeRabbit Reviews">
+    </a>
     <a href="https://www.bestpractices.dev/projects/9789"
        rel="external"
        target="_blank">
