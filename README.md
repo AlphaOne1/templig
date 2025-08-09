@@ -25,7 +25,7 @@
         <img src="https://goreportcard.com/badge/github.com/AlphaOne1/templig"
              alt="Go Report Card">
     </a>
-    <a href="https://codecov.io/gh/AlphaOne1/templig"
+    <a href="https://app.codecov.io/gh/AlphaOne1/templig"
        rel="external noopener noreferrer"
        target="_blank">
         <img src="https://codecov.io/gh/AlphaOne1/templig/graph/badge.svg"
