@@ -57,11 +57,11 @@
         <img src="https://app.fossa.com/api/projects/git%2Bgithub.com%2FAlphaOne1%2Ftemplig.svg?type=shield&issueType=security"
              alt="FOSSA Security Status">
     </a>
-    <a href="https://godoc.org/github.com/AlphaOne1/templig"
+    <a href="https://pkg.go.dev/github.com/AlphaOne1/templig"
        rel="external noopener noreferrer"
        target="_blank">
-        <img src="https://godoc.org/github.com/AlphaOne1/templig?status.svg"
-             alt="GoDoc Reference">
+        <img src="https://pkg.go.dev/badge/github.com/AlphaOne1/templig.svg"
+             alt="Go Reference">
     </a>
 </p>
 <!-- markdownlint-enable MD013 MD033 MD041 -->
@@ -284,10 +284,10 @@ func main() {
 ### Validation
 
 The templating facilities allow also for a wide range of tests, but depend on the configuration file read. As it is
-most likely user supplied, possible consistency checks are not reliable in the form of template code.
+most likely user-supplied, possible consistency checks are not reliable in the form of template code.
 For this purpose, *templig* also allows for the configuration structure to implement the `Validator` interface.
-Implementing types provide a function `Validate` that allows *templig* to check __after__ the configuration was read,
-if its structure should be considered valid and report errors accordingly.
+Implementing types provide a `Validate` method that allows *templig* to check—__after__ the configuration is
+read—whether its structure should be considered valid and report errors accordingly.
 
 ```go
 package main
