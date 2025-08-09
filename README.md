@@ -1,4 +1,4 @@
-<!-- markdownlint-disable MD033 -->
+<!-- markdownlint-disable MD013 MD033 -->
 <p align="center">
     <img src="templig_logo.svg" width="25%" alt="Logo"><br>
     <a href="https://github.com/AlphaOne1/templig/actions/workflows/test.yml"
@@ -55,7 +55,7 @@
         <img src="https://app.fossa.com/api/projects/git%2Bgithub.com%2FAlphaOne1%2Ftemplig.svg?type=shield&issueType=license"
             alt="FOSSA Status">
     </a>
-    <a href="https://app.fossa.com/projects/git%2Bgithub.com%2FAlphaOne1%2Ftemplig?ref=badge_shield&issueType=security" 
+    <a href="https://app.fossa.com/projects/git%2Bgithub.com%2FAlphaOne1%2Ftemplig?ref=badge_shield&issueType=security"
        rel="external noopener noreferrer"
        target="_blank">
         <img src="https://app.fossa.com/api/projects/git%2Bgithub.com%2FAlphaOne1%2Ftemplig.svg?type=shield&issueType=security"
@@ -68,7 +68,7 @@
              alt="GoDoc Reference">
     </a>
 </p>
-<!-- markdownlint-enable MD033 -->
+<!-- markdownlint-enable MD013 MD033 -->
 
 templig
 =======
@@ -84,7 +84,7 @@ Configurations that implement the `Validator` interface also have automated chec
 
 This is not the first configuration library and surely will not be the last. There exist alternatives, the most
 elaborate of them may be [viper](https://github.com/spf13/viper). The difference to basically all of these is that
-they burden the developer to provide all the means to gather the configuration information. So if the developer 
+they burden the developer to provide all the means to gather the configuration information. So if the developer
 does not foresee a means to read a value from the environment, a user cannot use this. *templig* turns that
 around and gives the developer a simple interface to do what he wants—read a config—and gives the user the means
 to compile his configuration in whatever way he sees fit. Experience shows that the target system environments can
@@ -249,9 +249,9 @@ name: Interesting Name
 pass: {{ read "pass.txt" | required "password required" | quote }}
 ```
 
-One can see the templating code between the double curly braces `{{` and `}}`. 
+One can see the templating code between the double curly braces `{{` and `}}`.
 The following program is essentially the same as in the [Simple Case](#simple-case).
-It just adds the `pass` field to the configuration: 
+It just adds the `pass` field to the configuration:
 
 ```go
 package main
@@ -359,7 +359,7 @@ plain text to any location.
 *templig* offers several possibilities to write the final configuration to a `Writer`:
 
    1. `To` writes the configuration completely, that is including secrets, to the given `Writer`.
- 
+
       ```go
       c, _ := FromFile[Config]("my_config.yaml")
       c.To(os.Stdout)
@@ -374,7 +374,7 @@ plain text to any location.
         - secretPass0
         - alternativePass1
       ```
-      
+
    2. `ToSecretsHidden` writes the configuration, hiding secrets recognized using the `SecretRE` regular expression.
       The example of 1. will then become:
 
@@ -384,7 +384,7 @@ plain text to any location.
       ```
 
       With the new output to be:
-      
+
       ```yaml
       id:   23
       name: Interesting Name
