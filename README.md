@@ -1,66 +1,70 @@
+<!-- markdownlint-disable MD013 MD033 MD041 -->
 <p align="center">
     <img src="templig_logo.svg" width="25%" alt="Logo"><br>
     <a href="https://github.com/AlphaOne1/templig/actions/workflows/test.yml"
-       rel="external"
+       rel="external noopener noreferrer"
        target="_blank">
         <img src="https://github.com/AlphaOne1/templig/actions/workflows/test.yml/badge.svg"
              alt="Test Pipeline Result">
     </a>
     <a href="https://github.com/AlphaOne1/templig/actions/workflows/codeql.yml"
-       rel="external"
+       rel="external noopener noreferrer"
        target="_blank">
         <img src="https://github.com/AlphaOne1/templig/actions/workflows/codeql.yml/badge.svg"
              alt="CodeQL Pipeline Result">
     </a>
     <a href="https://github.com/AlphaOne1/templig/actions/workflows/security.yml"
-       rel="external"
+       rel="external noopener noreferrer"
        target="_blank">
         <img src="https://github.com/AlphaOne1/templig/actions/workflows/security.yml/badge.svg"
              alt="Security Pipeline Result">
     </a>
     <a href="https://goreportcard.com/report/github.com/AlphaOne1/templig"
-       rel="external"
+       rel="external noopener noreferrer"
        target="_blank">
         <img src="https://goreportcard.com/badge/github.com/AlphaOne1/templig"
              alt="Go Report Card">
     </a>
     <a href="https://codecov.io/github/AlphaOne1/templig"
-       rel="external"
+       rel="external noopener noreferrer"
        target="_blank">
         <img src="https://codecov.io/github/AlphaOne1/templig/graph/badge.svg?token=P18EOCUPU8"
              alt="Code Coverage">
     </a>
+    <img src="https://img.shields.io/coderabbit/prs/github/AlphaOne1/templig"
+         alt="CodeRabbit Reviews">
     <a href="https://www.bestpractices.dev/projects/9789"
-       rel="external"
+       rel="external noopener noreferrer"
        target="_blank">
         <img src="https://www.bestpractices.dev/projects/9789/badge"
-             alt="OpenSSF Best Practises">
+             alt="OpenSSF Best Practices">
     </a>
     <a href="https://scorecard.dev/viewer/?uri=github.com/AlphaOne1/templig"
-       rel="external"
+       rel="external noopener noreferrer"
        target="_blank">
         <img src="https://api.scorecard.dev/projects/github.com/AlphaOne1/templig/badge"
              alt="OpenSSF Scorecard">
     </a>
     <a href="https://app.fossa.com/projects/git%2Bgithub.com%2FAlphaOne1%2Ftemplig?ref=badge_shield&issueType=license"
-       rel="external"
+       rel="external noopener noreferrer"
        target="_blank">
         <img src="https://app.fossa.com/api/projects/git%2Bgithub.com%2FAlphaOne1%2Ftemplig.svg?type=shield&issueType=license"
-            alt="FOSSA Status">
+            alt="FOSSA License Status">
     </a>
-    <a href="https://app.fossa.com/projects/git%2Bgithub.com%2FAlphaOne1%2Ftemplig?ref=badge_shield&issueType=security" 
-       rel="external"
+    <a href="https://app.fossa.com/projects/git%2Bgithub.com%2FAlphaOne1%2Ftemplig?ref=badge_shield&issueType=security"
+       rel="external noopener noreferrer"
        target="_blank">
         <img src="https://app.fossa.com/api/projects/git%2Bgithub.com%2FAlphaOne1%2Ftemplig.svg?type=shield&issueType=security"
-             alt="FOSSA Status">
+             alt="FOSSA Security Status">
     </a>
-    <a href="https://godoc.org/github.com/AlphaOne1/templig"
-       rel="external"
+    <a href="https://pkg.go.dev/github.com/AlphaOne1/templig"
+       rel="external noopener noreferrer"
        target="_blank">
-        <img src="https://godoc.org/github.com/AlphaOne1/templig?status.svg"
-             alt="GoDoc Reference">
+        <img src="https://pkg.go.dev/badge/github.com/AlphaOne1/templig.svg"
+             alt="Go Reference">
     </a>
 </p>
+<!-- markdownlint-enable MD013 MD033 MD041 -->
 
 templig
 =======
@@ -76,7 +80,7 @@ Configurations that implement the `Validator` interface also have automated chec
 
 This is not the first configuration library and surely will not be the last. There exist alternatives, the most
 elaborate of them may be [viper](https://github.com/spf13/viper). The difference to basically all of these is that
-they burden the developer to provide all the means to gather the configuration information. So if the developer 
+they burden the developer to provide all the means to gather the configuration information. So if the developer
 does not foresee a means to read a value from the environment, a user cannot use this. *templig* turns that
 around and gives the developer a simple interface to do what he wants—read a config—and gives the user the means
 to compile his configuration in whatever way he sees fit. Experience shows that the target system environments can
@@ -241,9 +245,9 @@ name: Interesting Name
 pass: {{ read "pass.txt" | required "password required" | quote }}
 ```
 
-One can see the templating code between the double curly braces `{{` and `}}`. 
+One can see the templating code between the double curly braces `{{` and `}}`.
 The following program is essentially the same as in the [Simple Case](#simple-case).
-It just adds the `pass` field to the configuration: 
+It just adds the `pass` field to the configuration:
 
 ```go
 package main
@@ -280,10 +284,10 @@ func main() {
 ### Validation
 
 The templating facilities allow also for a wide range of tests, but depend on the configuration file read. As it is
-most likely user supplied, possible consistency checks are not reliable in the form of template code.
+most likely user-supplied, possible consistency checks are not reliable in the form of template code.
 For this purpose, *templig* also allows for the configuration structure to implement the `Validator` interface.
-Implementing types provide a function `Validate` that allows *templig* to check __after__ the configuration was read, if
-its structure should be considered valid and report errors accordingly.
+Implementing types provide a `Validate` method that allows *templig* to check—__after__ the configuration is
+read—whether its structure should be considered valid and report errors accordingly.
 
 ```go
 package main
@@ -351,7 +355,7 @@ plain text to any location.
 *templig* offers several possibilities to write the final configuration to a `Writer`:
 
    1. `To` writes the configuration completely, that is including secrets, to the given `Writer`.
- 
+
       ```go
       c, _ := FromFile[Config]("my_config.yaml")
       c.To(os.Stdout)
@@ -366,7 +370,7 @@ plain text to any location.
         - secretPass0
         - alternativePass1
       ```
-      
+
    2. `ToSecretsHidden` writes the configuration, hiding secrets recognized using the `SecretRE` regular expression.
       The example of 1. will then become:
 
@@ -376,7 +380,7 @@ plain text to any location.
       ```
 
       With the new output to be:
-      
+
       ```yaml
       id:   23
       name: Interesting Name
