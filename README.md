@@ -37,7 +37,7 @@
        rel="external noopener noreferrer"
        target="_blank">
         <img src="https://www.bestpractices.dev/projects/9789/badge"
-             alt="OpenSSF Best Practises">
+             alt="OpenSSF Best Practices">
     </a>
     <a href="https://scorecard.dev/viewer/?uri=github.com/AlphaOne1/templig"
        rel="external noopener noreferrer"
@@ -49,13 +49,13 @@
        rel="external noopener noreferrer"
        target="_blank">
         <img src="https://app.fossa.com/api/projects/git%2Bgithub.com%2FAlphaOne1%2Ftemplig.svg?type=shield&issueType=license"
-            alt="FOSSA Status">
+            alt="FOSSA License Status">
     </a>
     <a href="https://app.fossa.com/projects/git%2Bgithub.com%2FAlphaOne1%2Ftemplig?ref=badge_shield&issueType=security"
        rel="external noopener noreferrer"
        target="_blank">
         <img src="https://app.fossa.com/api/projects/git%2Bgithub.com%2FAlphaOne1%2Ftemplig.svg?type=shield&issueType=security"
-             alt="FOSSA Status">
+             alt="FOSSA Security Status">
     </a>
     <a href="https://godoc.org/github.com/AlphaOne1/templig"
        rel="external noopener noreferrer"
@@ -286,8 +286,8 @@ func main() {
 The templating facilities allow also for a wide range of tests, but depend on the configuration file read. As it is
 most likely user supplied, possible consistency checks are not reliable in the form of template code.
 For this purpose, *templig* also allows for the configuration structure to implement the `Validator` interface.
-Implementing types provide a function `Validate` that allows *templig* to check __after__ the configuration was read, if
-its structure should be considered valid and report errors accordingly.
+Implementing types provide a function `Validate` that allows *templig* to check __after__ the configuration was read,
+if its structure should be considered valid and report errors accordingly.
 
 ```go
 package main
