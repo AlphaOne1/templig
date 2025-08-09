@@ -1,72 +1,74 @@
+<!-- markdownlint-disable MD033 -->
 <p align="center">
     <img src="templig_logo.svg" width="25%" alt="Logo"><br>
     <a href="https://github.com/AlphaOne1/templig/actions/workflows/test.yml"
-       rel="external"
+       rel="external noopener noreferrer"
        target="_blank">
         <img src="https://github.com/AlphaOne1/templig/actions/workflows/test.yml/badge.svg"
              alt="Test Pipeline Result">
     </a>
     <a href="https://github.com/AlphaOne1/templig/actions/workflows/codeql.yml"
-       rel="external"
+       rel="external noopener noreferrer"
        target="_blank">
         <img src="https://github.com/AlphaOne1/templig/actions/workflows/codeql.yml/badge.svg"
              alt="CodeQL Pipeline Result">
     </a>
     <a href="https://github.com/AlphaOne1/templig/actions/workflows/security.yml"
-       rel="external"
+       rel="external noopener noreferrer"
        target="_blank">
         <img src="https://github.com/AlphaOne1/templig/actions/workflows/security.yml/badge.svg"
              alt="Security Pipeline Result">
     </a>
     <a href="https://goreportcard.com/report/github.com/AlphaOne1/templig"
-       rel="external"
+       rel="external noopener noreferrer"
        target="_blank">
         <img src="https://goreportcard.com/badge/github.com/AlphaOne1/templig"
              alt="Go Report Card">
     </a>
     <a href="https://codecov.io/github/AlphaOne1/templig"
-       rel="external"
+       rel="external noopener noreferrer"
        target="_blank">
         <img src="https://codecov.io/github/AlphaOne1/templig/graph/badge.svg?token=P18EOCUPU8"
              alt="Code Coverage">
     </a>
     <a href="https://img.shields.io/coderabbit/prs/github/AlphaOne1/templig"
-       rel="external"
+       rel="external noopener noreferrer"
        target="_blank">
         <img src="https://img.shields.io/coderabbit/prs/github/AlphaOne1/templig"
              alt="CodeRabbit Reviews">
     </a>
     <a href="https://www.bestpractices.dev/projects/9789"
-       rel="external"
+       rel="external noopener noreferrer"
        target="_blank">
         <img src="https://www.bestpractices.dev/projects/9789/badge"
              alt="OpenSSF Best Practises">
     </a>
     <a href="https://scorecard.dev/viewer/?uri=github.com/AlphaOne1/templig"
-       rel="external"
+       rel="external noopener noreferrer"
        target="_blank">
         <img src="https://api.scorecard.dev/projects/github.com/AlphaOne1/templig/badge"
              alt="OpenSSF Scorecard">
     </a>
     <a href="https://app.fossa.com/projects/git%2Bgithub.com%2FAlphaOne1%2Ftemplig?ref=badge_shield&issueType=license"
-       rel="external"
+       rel="external noopener noreferrer"
        target="_blank">
         <img src="https://app.fossa.com/api/projects/git%2Bgithub.com%2FAlphaOne1%2Ftemplig.svg?type=shield&issueType=license"
             alt="FOSSA Status">
     </a>
     <a href="https://app.fossa.com/projects/git%2Bgithub.com%2FAlphaOne1%2Ftemplig?ref=badge_shield&issueType=security" 
-       rel="external"
+       rel="external noopener noreferrer"
        target="_blank">
         <img src="https://app.fossa.com/api/projects/git%2Bgithub.com%2FAlphaOne1%2Ftemplig.svg?type=shield&issueType=security"
              alt="FOSSA Status">
     </a>
     <a href="https://godoc.org/github.com/AlphaOne1/templig"
-       rel="external"
+       rel="external noopener noreferrer"
        target="_blank">
         <img src="https://godoc.org/github.com/AlphaOne1/templig?status.svg"
              alt="GoDoc Reference">
     </a>
 </p>
+<!-- markdownlint-enable MD033 -->
 
 templig
 =======
