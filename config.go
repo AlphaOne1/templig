@@ -13,7 +13,7 @@ import (
 	"path/filepath"
 	"text/template"
 
-	"gopkg.in/yaml.v3"
+	"go.yaml.in/yaml/v4"
 )
 
 var (
@@ -165,7 +165,11 @@ func From[T any](readers ...io.Reader) (*Config[T], error) {
 
 // To writes a configuration to the given io.Writer.
 func (c *Config[T]) To(w io.Writer) error {
-	return wrapError("could not encode configuration", yaml.NewEncoder(w).Encode(&c.content))
+	enc := yaml.NewEncoder(w)
+	err := wrapError("could not encode configuration", enc.Encode(&c.content))
+	encCloseErr := enc.Close()
+
+	return errors.Join(err, encCloseErr)
 }
 
 // ToSecretsHidden writes the configuration to the given io.Writer and hides secret values using the [SecretRE].
@@ -184,16 +188,19 @@ func (c *Config[T]) To(w io.Writer) error {
 //	secrets: *
 func (c *Config[T]) ToSecretsHidden(w io.Writer) error {
 	var writeErr error
+	var encCloseErr error
 	node := yaml.Node{}
 
 	encodeErr := node.Encode(c.content)
 
 	if encodeErr == nil {
 		HideSecrets(&node, true)
-		writeErr = yaml.NewEncoder(w).Encode(node)
+		enc := yaml.NewEncoder(w)
+		writeErr = enc.Encode(node)
+		encCloseErr = enc.Close()
 	}
 
-	return errors.Join(encodeErr, writeErr)
+	return errors.Join(encodeErr, writeErr, encCloseErr)
 }
 
 // ToSecretsHiddenStructured writes the configuration to the given io.Writer
@@ -215,16 +222,19 @@ func (c *Config[T]) ToSecretsHidden(w io.Writer) error {
 //	  - *******
 func (c *Config[T]) ToSecretsHiddenStructured(w io.Writer) error {
 	var writeErr error
+	var encCloseErr error
 	node := yaml.Node{}
 
 	encodeErr := node.Encode(c.content)
 
 	if encodeErr == nil {
 		HideSecrets(&node, false)
-		writeErr = yaml.NewEncoder(w).Encode(node)
+		enc := yaml.NewEncoder(w)
+		writeErr = enc.Encode(node)
+		encCloseErr = enc.Close()
 	}
 
-	return errors.Join(encodeErr, writeErr)
+	return errors.Join(encodeErr, writeErr, encCloseErr)
 }
 
 // FromFile loads a series of configuration files. The first file is considered the base, all others are
