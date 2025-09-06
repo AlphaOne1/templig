@@ -167,9 +167,9 @@ func From[T any](readers ...io.Reader) (*Config[T], error) {
 func (c *Config[T]) To(w io.Writer) error {
 	enc := yaml.NewEncoder(w)
 	err := wrapError("could not encode configuration", enc.Encode(&c.content))
-	_ = enc.Close()
+	encCloseErr := enc.Close()
 
-	return err
+	return errors.Join(err, encCloseErr)
 }
 
 // ToSecretsHidden writes the configuration to the given io.Writer and hides secret values using the [SecretRE].
@@ -188,6 +188,7 @@ func (c *Config[T]) To(w io.Writer) error {
 //	secrets: *
 func (c *Config[T]) ToSecretsHidden(w io.Writer) error {
 	var writeErr error
+	var encCloseErr error
 	node := yaml.Node{}
 
 	encodeErr := node.Encode(c.content)
@@ -195,11 +196,11 @@ func (c *Config[T]) ToSecretsHidden(w io.Writer) error {
 	if encodeErr == nil {
 		HideSecrets(&node, true)
 		enc := yaml.NewEncoder(w)
-		writeErr = yaml.NewEncoder(w).Encode(node)
-		_ = enc.Close()
+		writeErr = enc.Encode(node)
+		encCloseErr = enc.Close()
 	}
 
-	return errors.Join(encodeErr, writeErr)
+	return errors.Join(encodeErr, writeErr, encCloseErr)
 }
 
 // ToSecretsHiddenStructured writes the configuration to the given io.Writer
@@ -221,6 +222,7 @@ func (c *Config[T]) ToSecretsHidden(w io.Writer) error {
 //	  - *******
 func (c *Config[T]) ToSecretsHiddenStructured(w io.Writer) error {
 	var writeErr error
+	var encCloseErr error
 	node := yaml.Node{}
 
 	encodeErr := node.Encode(c.content)
@@ -228,11 +230,11 @@ func (c *Config[T]) ToSecretsHiddenStructured(w io.Writer) error {
 	if encodeErr == nil {
 		HideSecrets(&node, false)
 		enc := yaml.NewEncoder(w)
-		writeErr = yaml.NewEncoder(w).Encode(node)
-		_ = enc.Close()
+		writeErr = enc.Encode(node)
+		encCloseErr = enc.Close()
 	}
 
-	return errors.Join(encodeErr, writeErr)
+	return errors.Join(encodeErr, writeErr, encCloseErr)
 }
 
 // FromFile loads a series of configuration files. The first file is considered the base, all others are
