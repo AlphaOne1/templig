@@ -1,3 +1,9 @@
+Release 0.8.3
+=============
+
+- changed unmaintained gopkg.in/yaml.v3 to go.yaml.in/yaml/v4
+- dependency updates
+
 Release 0.8.2
 =============
 
