@@ -724,3 +724,256 @@ func TestReadConfigValidated(t *testing.T) {
 		}
 	}
 }
+
+// -----------------------------------------------------------------------------
+// Additional tests (using Go's standard "testing" package) to increase coverage
+// and validate edge cases, writer errors, immutability, and round-trip behavior.
+// -----------------------------------------------------------------------------
+
+// helper: strict order-equality for string slices
+func equalStringSlices(a, b []string) bool {
+	if len(a) != len(b) {
+		return false
+	}
+	for i := range a {
+		if a[i] != b[i] {
+			return false
+		}
+	}
+	return true
+}
+
+func TestRoundTripBuffer(t *testing.T) {
+	t.Parallel()
+
+	orig, err := templig.FromFile[TestConfig]("testData/test_config_0.yaml")
+	if err != nil {
+		t.Fatalf("reading base config failed: %v", err)
+	}
+
+	var buf bytes.Buffer
+	if err := orig.To(&buf); err != nil {
+		t.Fatalf("serializing to buffer failed: %v", err)
+	}
+
+	cp, err := templig.From[TestConfig](&buf)
+	if err != nil {
+		t.Fatalf("deserializing from buffer failed: %v", err)
+	}
+
+	got := cp.Get()
+	want := orig.Get()
+
+	if got.ID != want.ID {
+		t.Errorf("ID mismatch: want %v, got %v", want.ID, got.ID)
+	}
+	if got.Name != want.Name {
+		t.Errorf("Name mismatch: want %q, got %q", want.Name, got.Name)
+	}
+	if (got.Conn == nil) != (want.Conn == nil) {
+		t.Fatalf("Conn nil-mismatch: want %v, got %v", want.Conn != nil, got.Conn != nil)
+	}
+	if got.Conn != nil {
+		if got.Conn.URL != want.Conn.URL {
+			t.Errorf("URL mismatch: want %q, got %q", want.Conn.URL, got.Conn.URL)
+		}
+		if !equalStringSlices(got.Conn.Passes, want.Conn.Passes) {
+			t.Errorf("passes mismatch: want %v, got %v", want.Conn.Passes, got.Conn.Passes)
+		}
+	}
+}
+
+func TestGetReturnsCopy(t *testing.T) {
+	t.Parallel()
+
+	c, err := templig.FromFile[TestConfig]("testData/test_config_0.yaml")
+	if err != nil {
+		t.Fatalf("reading base config failed: %v", err)
+	}
+
+	mod := c.Get()
+	mod.Name = "CHANGED"
+
+	// Ensure internal state hasn't changed
+	if c.Get().Name == "CHANGED" {
+		t.Errorf("Get should return a copy; internal state mutated unexpectedly")
+	}
+
+	// Also ensure serialization doesn't include the change
+	var buf bytes.Buffer
+	if err := c.To(&buf); err != nil {
+		t.Fatalf("serializing failed: %v", err)
+	}
+	if strings.Contains(buf.String(), "CHANGED") {
+		t.Errorf("serialized output contains modified value; expected original data only")
+	}
+}
+
+func TestToSecretsHidden_WriterError(t *testing.T) {
+	t.Parallel()
+
+	c, err := templig.FromFile[TestConfig]("testData/test_config_0.yaml")
+	if err != nil {
+		t.Fatalf("reading base config failed: %v", err)
+	}
+
+	if err := c.ToSecretsHidden(&BrokenIO{}); err == nil {
+		t.Errorf("expected error when writing secrets-hidden config to broken writer")
+	}
+}
+
+func TestToSecretsHiddenStructured_WriterError(t *testing.T) {
+	t.Parallel()
+
+	c, err := templig.FromFile[TestConfig]("testData/test_config_0.yaml")
+	if err != nil {
+		t.Fatalf("reading base config failed: %v", err)
+	}
+
+	if err := c.ToSecretsHiddenStructured(&BrokenIO{}); err == nil {
+		t.Errorf("expected error when writing structured secrets-hidden config to broken writer")
+	}
+}
+
+func TestFromFile_InvalidYAML_TempFile(t *testing.T) {
+	t.Parallel()
+
+	dir := t.TempDir()
+	path := dir + "/invalid.yaml"
+	content := "id: 23\nname: {{ required \"has to be set\" 9 | quote" // intentionally missing closing braces
+
+	if writeErr := os.WriteFile(path, []byte(content), 0o600); writeErr != nil {
+		t.Fatalf("failed writing temp invalid file: %v", writeErr)
+	}
+
+	c, err := templig.FromFile[TestConfig](path)
+	if err == nil {
+		t.Errorf("expected error when reading invalid YAML/template, got nil")
+	}
+	if c != nil {
+		t.Errorf("expected returned config to be nil on invalid input")
+	}
+}
+
+func TestFrom_EmptyReader(t *testing.T) {
+	t.Parallel()
+
+	var empty bytes.Buffer
+	c, err := templig.From[TestConfig](&empty)
+	if err == nil {
+		t.Errorf("expected error when reading from empty reader, got nil")
+	}
+	if c != nil {
+		t.Errorf("expected nil config when reading from empty reader")
+	}
+}
+
+func TestSecretsHiddenStructured_RoundTripIsValidYAML(t *testing.T) {
+	t.Parallel()
+
+	c, err := templig.FromFile[TestConfig]("testData/test_config_0.yaml")
+	if err != nil {
+		t.Fatalf("reading base config failed: %v", err)
+	}
+
+	orig := c.Get()
+	if orig.Conn == nil {
+		t.Fatalf("test precondition failed: Conn should not be nil")
+	}
+	origCount := len(orig.Conn.Passes)
+
+	var buf bytes.Buffer
+	if err := c.ToSecretsHiddenStructured(&buf); err != nil {
+		t.Fatalf("generating structured secrets-hidden failed: %v", err)
+	}
+
+	// Re-parse sanitized YAML; it should remain valid
+	sanitized, err := templig.From[TestConfig](&buf)
+	if err != nil {
+		t.Fatalf("parsing structured secrets-hidden YAML failed: %v", err)
+	}
+	got := sanitized.Get()
+	if got.Conn == nil {
+		t.Fatalf("expected Conn not to be nil in sanitized output")
+	}
+	if len(got.Conn.Passes) != origCount {
+		t.Errorf("expected %d sanitized passes, got %d", origCount, len(got.Conn.Passes))
+	}
+	for i, p := range got.Conn.Passes {
+		if p != "*****" {
+			t.Errorf("expected pass %d to be '*****', got %q", i, p)
+		}
+	}
+	// Ensure no original secrets leaked into the sanitized text
+	out := buf.String()
+	for _, secret := range orig.Conn.Passes {
+		if strings.Contains(out, secret) {
+			t.Errorf("found leaked secret %q in sanitized output", secret)
+		}
+	}
+}
+
+func TestReadOverlayConfig_ValidThenBrokenReader(t *testing.T) {
+	t.Parallel()
+
+	f0, openErr := os.Open("testData/test_config_0.yaml")
+	if openErr != nil {
+		t.Fatalf("failed to open base config: %v", openErr)
+	}
+	defer func() { _ = f0.Close() }()
+
+	if c, err := templig.From[TestConfig](f0, &BrokenIO{}); err == nil || c != nil {
+		t.Errorf("expected error and nil config when one of the overlay readers is broken")
+	}
+}
+
+func TestSecretsHidden_DoesNotMutateOriginal(t *testing.T) {
+	t.Parallel()
+
+	c, err := templig.FromFile[TestConfig]("testData/test_config_0.yaml")
+	if err != nil {
+		t.Fatalf("reading base config failed: %v", err)
+	}
+	before := c.Get()
+
+	var buf bytes.Buffer
+	if err := c.ToSecretsHidden(&buf); err != nil {
+		t.Fatalf("generating secrets-hidden failed: %v", err)
+	}
+
+	after := c.Get()
+	if before.ID != after.ID || before.Name != after.Name {
+		t.Errorf("unexpected mutation of scalar fields: before=%v after=%v", before, after)
+	}
+	switch {
+	case (before.Conn == nil) != (after.Conn == nil):
+		t.Errorf("unexpected mutation of Conn presence")
+	case before.Conn != nil:
+		if before.Conn.URL != after.Conn.URL {
+			t.Errorf("unexpected mutation of Conn.URL: before=%q after=%q", before.Conn.URL, after.Conn.URL)
+		}
+		if !equalStringSlices(before.Conn.Passes, after.Conn.Passes) {
+			t.Errorf("unexpected mutation of Conn.Passes: before=%v after=%v", before.Conn.Passes, after.Conn.Passes)
+		}
+	}
+}
+
+func TestSecretsHidden_PreservesNonSecretFields(t *testing.T) {
+	t.Parallel()
+
+	c, err := templig.FromFile[TestConfig]("testData/test_config_0.yaml")
+	if err != nil {
+		t.Fatalf("reading base config failed: %v", err)
+	}
+
+	var buf bytes.Buffer
+	if err := c.ToSecretsHidden(&buf); err != nil {
+		t.Fatalf("generating secrets-hidden failed: %v", err)
+	}
+
+	out := buf.String()
+	// Ensure a known non-secret field remains visible
+	if !strings.Contains(out, "url: https://www.tests.to") {
+		t.Errorf("expected non-secret URL to be preserved in secrets-hidden output; got:\n%s", out)
+	}
+}
