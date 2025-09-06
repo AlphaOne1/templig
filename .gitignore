@@ -3,3 +3,4 @@
 
 .idea
 /test/gen_*
+**/.DS_Store
