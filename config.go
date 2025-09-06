@@ -165,7 +165,11 @@ func From[T any](readers ...io.Reader) (*Config[T], error) {
 
 // To writes a configuration to the given io.Writer.
 func (c *Config[T]) To(w io.Writer) error {
-	return wrapError("could not encode configuration", yaml.NewEncoder(w).Encode(&c.content))
+	enc := yaml.NewEncoder(w)
+	err := wrapError("could not encode configuration", enc.Encode(&c.content))
+	_ = enc.Close()
+
+	return err
 }
 
 // ToSecretsHidden writes the configuration to the given io.Writer and hides secret values using the [SecretRE].
@@ -190,7 +194,9 @@ func (c *Config[T]) ToSecretsHidden(w io.Writer) error {
 
 	if encodeErr == nil {
 		HideSecrets(&node, true)
+		enc := yaml.NewEncoder(w)
 		writeErr = yaml.NewEncoder(w).Encode(node)
+		_ = enc.Close()
 	}
 
 	return errors.Join(encodeErr, writeErr)
@@ -221,7 +227,9 @@ func (c *Config[T]) ToSecretsHiddenStructured(w io.Writer) error {
 
 	if encodeErr == nil {
 		HideSecrets(&node, false)
+		enc := yaml.NewEncoder(w)
 		writeErr = yaml.NewEncoder(w).Encode(node)
+		_ = enc.Close()
 	}
 
 	return errors.Join(encodeErr, writeErr)
