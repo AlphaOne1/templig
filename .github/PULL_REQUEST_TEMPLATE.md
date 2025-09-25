@@ -1,3 +1,7 @@
+<!-- SPDX-FileCopyrightText: 2025 The templig contributors.
+     SPDX-License-Identifier: MPL-2.0
+-->
+
 ### All Submissions:
 
 * [ ] Have you followed the guidelines in our Contributing document?

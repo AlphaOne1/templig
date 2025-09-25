@@ -1,3 +1,7 @@
+<!-- SPDX-FileCopyrightText: 2025 The templig contributors.
+     SPDX-License-Identifier: MPL-2.0
+-->
+
 Contributing
 ============
 
@@ -17,7 +21,7 @@ request that contributors create
 to first discuss any new ideas. Your ideas and suggestions are welcome!
 
 Please ensure that the tests are passing when submitting a pull request. If
-you're adding new features to ActiveAdmin, please include tests.
+you're adding new features to *templig*, please include tests.
 
 
 Where do I go from here?

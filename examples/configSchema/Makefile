@@ -1,3 +1,6 @@
+# SPDX-FileCopyrightText: 2025 The templig contributors.
+# SPDX-License-Identifier: MPL-2.0
+
 .PHONY: all clean run
 
 all: config.go
