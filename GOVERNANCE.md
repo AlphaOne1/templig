@@ -14,17 +14,17 @@ model.
 Terms
 -----
 
-_user_: anyone who interacts with the project.
+*user*: anyone who interacts with the project.
 
-_contributor_: anyone who has contributed to the project in any way and to any
+*contributor*: anyone who has contributed to the project in any way and to any
 degree. Contributions may include code, documentation, reviews, manual testing,
 etc. All contributors are listed in the project's metadata
 (e.g. [AUTHORS.md](AUTHORS.md)).
 
-_core contributor_: anyone who has contributed repeatedly and significantly to
+*core contributor*: anyone who has contributed repeatedly and significantly to
 the project. Core contributors are recognized by GitHub “Member” badges.
 
-_Benevolent Dictator For Life (BDFL)_: the person who makes decisions when
+*Benevolent Dictator For Life (BDFL)*: the person who makes decisions when
 consensus cannot be reached. The project’s current BDFL is Alexander Adam
 (@AlphaOne1).
 
