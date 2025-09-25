@@ -74,7 +74,7 @@ All the good intentions go to waste, if nobody can enjoy the fruits of this labo
 due to non-existent (or bad, or wrong) documentation. Please take care that you
 include:
 
-- a coarse description of your nea feature
+- a coarse description of your new feature
 - generate new or update (in case) the existing examples
 - update the CHANGELOG.md
 
