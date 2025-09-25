@@ -1,3 +1,6 @@
+// SPDX-FileCopyrightText: 2025 The templig contributors.
+// SPDX-License-Identifier: MPL-2.0
+
 // Package main of the configSchema example.
 package main
 
@@ -24,7 +27,7 @@ func (c *Config) Validate() error {
 	result, resultErr := gojsonschema.Validate(schemaLoader, documentLoader)
 
 	if resultErr != nil {
-		return resultErr
+		return fmt.Errorf("could not validate: %w", resultErr)
 	}
 
 	if !result.Valid() {
