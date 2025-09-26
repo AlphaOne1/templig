@@ -1,9 +1,9 @@
-// Copyright the templig contributors.
+// SPDX-FileCopyrightText: 2025 The templig contributors.
 // SPDX-License-Identifier: MPL-2.0
 
 module github.com/AlphaOne1/templig
 
-go 1.23.0
+go 1.24.0
 
 require (
 	github.com/Masterminds/sprig/v3 v3.3.0
@@ -19,6 +19,6 @@ require (
 	github.com/mitchellh/copystructure v1.2.0 // indirect
 	github.com/mitchellh/reflectwalk v1.0.2 // indirect
 	github.com/shopspring/decimal v1.4.0 // indirect
-	github.com/spf13/cast v1.9.2 // indirect
-	golang.org/x/crypto v0.41.0 // indirect
+	github.com/spf13/cast v1.10.0 // indirect
+	golang.org/x/crypto v0.42.0 // indirect
 )

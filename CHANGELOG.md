@@ -1,3 +1,14 @@
+<!-- SPDX-FileCopyrightText: 2025 The templig contributors.
+     SPDX-License-Identifier: MPL-2.0
+-->
+Release 0.8.4
+=============
+
+- introduced governance model
+- enforce DCO
+- REUSE compliance
+- dependency updates
+
 Release 0.8.3
 =============
 

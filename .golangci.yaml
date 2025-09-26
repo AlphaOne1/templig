@@ -1,4 +1,4 @@
-# Copyright the templig contributors.
+# SPDX-FileCopyrightText: 2025 The templig contributors.
 # SPDX-License-Identifier: MPL-2.0
 
 # Configuration file for golangci-lint
@@ -58,11 +58,20 @@ linters:
                     files:
                         - $test
                         - "**/examples/**/*"
+                        - "!**/examples/configSchema/main.go"
                     allow:
                         - $gostd
                         - go.yaml.in/yaml/v4
                         - github.com/Masterminds/sprig/v3
                         - github.com/AlphaOne1/templig
+
+                configExample:
+                    files:
+                        - "**/examples/configSchema/main.go"
+                    allow:
+                        - $gostd
+                        - github.com/AlphaOne1/templig
+                        - github.com/xeipuuv/gojsonschema
 
         exhaustive:
             default-signifies-exhaustive: true

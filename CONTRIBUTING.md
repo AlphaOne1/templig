@@ -1,3 +1,7 @@
+<!-- SPDX-FileCopyrightText: 2025 The templig contributors.
+     SPDX-License-Identifier: MPL-2.0
+-->
+
 Contributing
 ============
 
@@ -17,7 +21,7 @@ request that contributors create
 to first discuss any new ideas. Your ideas and suggestions are welcome!
 
 Please ensure that the tests are passing when submitting a pull request. If
-you're adding new features to ActiveAdmin, please include tests.
+you're adding new features or bugfixes to *templig*, please include tests.
 
 
 Where do I go from here?
@@ -70,7 +74,7 @@ All the good intentions go to waste, if nobody can enjoy the fruits of this labo
 due to non-existent (or bad, or wrong) documentation. Please take care that you
 include:
 
-- a course description of your nea feature
+- a coarse description of your new feature
 - generate new or update (in case) the existing examples
 - update the CHANGELOG.md
 
@@ -101,4 +105,31 @@ A maintainer can only merge a Pull Request into master if:
 - approved by another maintainer
 - and is up to date with the default branch.
 
-Any maintainer is allowed to merge a PR if all of these conditions ae met.
+In addition to these automatic checks, the following conditions have to be met:
+
+- Changelog: The changelog has the sections with the changes of the past releases, these
+  are immutable less for corrections. There is at least one section explicating the next
+  release. All visible changes have to be included in the changelog. Further security
+  fixes have to be included here.
+
+Any maintainer is allowed to merge a PR if all of these conditions have been met.
+
+
+Developer Certificate of Origin (DCO)
+-------------------------------------
+
+This project enforces the [Developer Certificate of Origin (DCO)](https://developercertificate.org)
+(a copy is included in [DCO.txt](DCO.txt)).
+Every commit must be signed off, i.e., the commit message contains a line like:
+
+Signed-off-by: Your Name <you@example.com>
+
+Use `git commit -s` to add this automatically (this DCO “Signed-off-by” is a
+legal attestation and is different from cryptographic commit signing such as
+GPG/SSH). Pull requests and pushes without proper sign-offs will fail the
+compliance checks. You can alias `git commit` command to always include the
+flag as follows:
+
+```shell
+git config --global alias.ci 'commit -s'
+```
