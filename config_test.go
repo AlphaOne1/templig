@@ -359,6 +359,8 @@ func TestReadConfig(t *testing.T) {
 }
 
 func TestNoReaders(t *testing.T) {
+	t.Parallel()
+
 	c, fromErr := templig.From[TestConfig]()
 
 	if fromErr == nil {
@@ -371,6 +373,8 @@ func TestNoReaders(t *testing.T) {
 }
 
 func TestReadOverlayConfig(t *testing.T) {
+	t.Parallel()
+
 	config, configErr := templig.FromFile[TestConfig](
 		"testData/test_config_0.yaml",
 		"testData/test_config_0_overlay.yaml",
@@ -390,6 +394,8 @@ func TestReadOverlayConfig(t *testing.T) {
 }
 
 func TestReadOverlayConfigReader(t *testing.T) {
+	t.Parallel()
+
 	f0, _ := os.Open("testData/test_config_0.yaml")
 	f1, _ := os.Open("testData/test_config_0_overlay.yaml")
 
@@ -409,6 +415,8 @@ func TestReadOverlayConfigReader(t *testing.T) {
 }
 
 func TestReadOverlayConfigMismatch(t *testing.T) {
+	t.Parallel()
+
 	_, configErr := templig.FromFile[TestConfig](
 		"testData/test_config_0.yaml",
 		"testData/test_config_0_overlay_mismatch.yaml",
@@ -420,6 +428,8 @@ func TestReadOverlayConfigMismatch(t *testing.T) {
 }
 
 func TestReadOverlayConfigWrongType(t *testing.T) {
+	t.Parallel()
+
 	_, configErr := templig.FromFile[TestConfig](
 		"testData/test_config_0.yaml",
 		"testData/test_config_0_overlay_wrongtype.yaml",
@@ -441,6 +451,8 @@ func (b *BrokenIO) Write(_ []byte) (n int, err error) {
 }
 
 func TestBrokenReader(t *testing.T) {
+	t.Parallel()
+
 	c, fromErr := templig.From[TestConfig](&BrokenIO{})
 
 	if fromErr == nil {
@@ -453,6 +465,8 @@ func TestBrokenReader(t *testing.T) {
 }
 
 func TestReadOverlayConfigBrokenReader(t *testing.T) {
+	t.Parallel()
+
 	f0 := &BrokenIO{}
 	f1 := &BrokenIO{}
 
@@ -468,6 +482,8 @@ func TestReadOverlayConfigBrokenReader(t *testing.T) {
 }
 
 func TestNonexistentFile(t *testing.T) {
+	t.Parallel()
+
 	c, fromErr := templig.FromFile[TestConfig]("testData/test_does_not_exist.yaml")
 
 	if fromErr == nil {
@@ -480,6 +496,8 @@ func TestNonexistentFile(t *testing.T) {
 }
 
 func TestNonexistentFileOverlayAddon(t *testing.T) {
+	t.Parallel()
+
 	c, fromErr := templig.FromFile[TestConfig](
 		"testData/test_config_0.yaml",
 		"testData/test_does_not_exist.yaml",
@@ -495,6 +513,8 @@ func TestNonexistentFileOverlayAddon(t *testing.T) {
 }
 
 func TestNoFiles(t *testing.T) {
+	t.Parallel()
+
 	c, fromErr := templig.FromFile[TestConfig]([]string{}...)
 
 	if fromErr == nil {
@@ -507,6 +527,8 @@ func TestNoFiles(t *testing.T) {
 }
 
 func TestNoFilesDeprecated(t *testing.T) {
+	t.Parallel()
+
 	c, fromErr := templig.FromFiles[TestConfig]([]string{})
 
 	if fromErr == nil {
@@ -519,6 +541,8 @@ func TestNoFilesDeprecated(t *testing.T) {
 }
 
 func TestBrokenWriter(t *testing.T) {
+	t.Parallel()
+
 	c, _ := templig.FromFile[TestConfig]("testData/test_config_0.yaml")
 
 	toErr := c.To(&BrokenIO{})
@@ -529,6 +553,8 @@ func TestBrokenWriter(t *testing.T) {
 }
 
 func TestWriteFile(t *testing.T) {
+	t.Parallel()
+
 	config, _ := templig.FromFile[TestConfig]("testData/test_config_0.yaml")
 
 	err := config.ToFile("testData/test_config_written.yaml")
@@ -552,6 +578,8 @@ func TestWriteFile(t *testing.T) {
 }
 
 func TestWriteProtectedFile(t *testing.T) {
+	t.Parallel()
+
 	c, _ := templig.FromFile[TestConfig]("testData/test_config_0.yaml")
 
 	if chmodErr := os.Chmod("testData/test_write_protected.yaml", 0400); chmodErr != nil {
@@ -566,6 +594,8 @@ func TestWriteProtectedFile(t *testing.T) {
 }
 
 func TestSecretsHidden(t *testing.T) {
+	t.Parallel()
+
 	c, _ := templig.FromFile[TestConfig]("testData/test_config_0.yaml")
 
 	buf := bytes.Buffer{}
@@ -584,6 +614,8 @@ func TestSecretsHidden(t *testing.T) {
 }
 
 func TestSecretsHiddenStructured(t *testing.T) {
+	t.Parallel()
+
 	c, _ := templig.FromFile[TestConfig]("testData/test_config_0.yaml")
 
 	buf := bytes.Buffer{}
@@ -676,51 +708,47 @@ func TestReadConfigValidated(t *testing.T) {
 	testBuf := bytes.Buffer{}
 
 	for testNum, test := range tests {
-		if len(test.in) > 0 && len(test.inFile) > 0 {
-			t.Errorf("%v: input data and file given at the same time", testNum)
-		}
-
-		testBuf.Reset()
-		testBuf.WriteString(test.in)
-
-		if test.env != nil {
-			for ei, ev := range test.env {
-				t.Setenv(ei, ev)
+		t.Run(fmt.Sprintf("TestReadConfigValidated-%d", testNum), func(t *testing.T) {
+			if len(test.in) > 0 && len(test.inFile) > 0 {
+				t.Errorf("%v: input data and file given at the same time", testNum)
 			}
-		}
 
-		var config *templig.Config[TestConfigValidated]
-		var fromErr error
+			testBuf.Reset()
+			testBuf.WriteString(test.in)
 
-		switch {
-		case len(test.in) > 0:
-			config, fromErr = templig.From[TestConfigValidated](&testBuf)
-		case len(test.inFile) > 0:
-			config, fromErr = templig.FromFile[TestConfigValidated](test.inFile)
-		default:
-			t.Errorf("%v: neither input data nor input file given", testNum)
-		}
-
-		if test.wantErr && fromErr == nil {
-			t.Errorf("%v: wanted error but got nil", testNum)
-		}
-		if !test.wantErr && fromErr != nil {
-			t.Errorf("%v: did not want error but got %v", testNum, fromErr)
-		}
-
-		if config != nil {
-			if config.Get().ID != test.want.ID {
-				t.Errorf("%v: wanted ID %v but got %v", testNum, test.want.ID, config.Get().ID)
+			if test.env != nil {
+				for ei, ev := range test.env {
+					t.Setenv(ei, ev)
+				}
 			}
-			if config.Get().Name != test.want.Name {
-				t.Errorf("%v: wanted Name %v but got %v", testNum, test.want.Name, config.Get().Name)
-			}
-		}
 
-		if test.env != nil {
-			for ei := range test.env {
-				_ = os.Unsetenv(ei)
+			var config *templig.Config[TestConfigValidated]
+			var fromErr error
+
+			switch {
+			case len(test.in) > 0:
+				config, fromErr = templig.From[TestConfigValidated](&testBuf)
+			case len(test.inFile) > 0:
+				config, fromErr = templig.FromFile[TestConfigValidated](test.inFile)
+			default:
+				t.Errorf("%v: neither input data nor input file given", testNum)
 			}
-		}
+
+			if test.wantErr && fromErr == nil {
+				t.Errorf("%v: wanted error but got nil", testNum)
+			}
+			if !test.wantErr && fromErr != nil {
+				t.Errorf("%v: did not want error but got %v", testNum, fromErr)
+			}
+
+			if config != nil {
+				if config.Get().ID != test.want.ID {
+					t.Errorf("%v: wanted ID %v but got %v", testNum, test.want.ID, config.Get().ID)
+				}
+				if config.Get().Name != test.want.Name {
+					t.Errorf("%v: wanted Name %v but got %v", testNum, test.want.Name, config.Get().Name)
+				}
+			}
+		})
 	}
 }

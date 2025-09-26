@@ -22,3 +22,5 @@ require (
 	github.com/spf13/cast v1.10.0 // indirect
 	golang.org/x/crypto v0.42.0 // indirect
 )
+
+tool gotest.tools/gotestsum
