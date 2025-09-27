@@ -45,14 +45,14 @@ Make sure you're using a recent Go version.
 You can run the test suite from the base folder using the following command:
 
 ```bash
-go test ./...
+go test -race ./...
 ```
 
 
 ### Implement your fix or feature
 
 At this point, you're ready to make your changes. Feel free to ask for help.
-Be sure to have run the go fmt tool to have a unified code style:
+Be sure to have run the `go fmt` tool to have a unified code style:
 
 ```bash
 go fmt ./...
@@ -74,14 +74,14 @@ All the good intentions go to waste, if nobody can enjoy the fruits of this labo
 due to non-existent (or bad, or wrong) documentation. Please take care that you
 include:
 
-- a coarse description of your new feature
+- a concise description of your new feature
 - generate new or update (in case) the existing examples
-- update the CHANGELOG.md
+- update CHANGELOG.md
 
-The CHANGELOG document contains the changes of the next major contains all the
-changes of the current major version since x.0.0. On a major release, the CHANGELOG
-can be emptied as the older changes are still visible in the history of the version
-control system.
+The CHANGELOG document contains the changes of the next release and all the
+changes of the current major version since x.0.0. On a major release, the
+CHANGELOG can be emptied as the older changes are still visible in the history
+of the version control system.
 
 
 ### Create a Pull Request
@@ -90,10 +90,10 @@ At this point, if your changes look good and tests are passing, you are ready to
 create a pull request.
 
 GitHub Actions will run the test suite against the latest Go version. There are
-tests that most likely did not run on the developers machine (CodeQL, Trivy). These
-tests may produce warnings. Take those warnings serious even if they seem harmless.
-Too many harmless warnings could possibly overlay really serious ones, so all
-warnings are to be resolved.
+tests that most likely did not run on the developers machine (CodeQL, Trivy).
+These tests may produce warnings. Take those warnings seriously even if they
+seem harmless. Too many harmless warnings could possibly overlay really serious
+ones, so all warnings are to be resolved.
 
 
 Merging a PR (maintainers only)
