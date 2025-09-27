@@ -56,7 +56,6 @@ jobs:
         name: Checksum Release Assets
         outputs:
             hashBase64File: ${{ steps.hashes.outputs.handle }}
-            tagSubjectsFile: ${{ steps.tag_subject.outputs.handle }}
         steps:
             - name: Harden Runner
               uses: step-security/harden-runner@f4a75cfd619ee5ce8d5b864b0d183aff3c69b55a # v2.13.1
@@ -82,38 +81,41 @@ jobs:
                   echo "Downloaded assets:"
                   ls -lah
 
-            - name: Generate Checksums
-              working-directory: release-assets
-              run: |
-                  set -euo pipefail
-                  
-                  # Robustly hash all regular files in this directory, then base64 and write via tee.
-                  LC_ALL=C find . -maxdepth 1 -type f -printf '%P\0' \
-                    | sort -z \
-                    | xargs -0 sha256sum -- \
-                    | base64 -w0 \
-                    | tee check.sha256 > /dev/null
-
-            - name: Upload Checksums
-              id: hashes
-              uses: slsa-framework/slsa-github-generator/actions/generator/generic/create-base64-subjects-from-file@f7dd8c54c2067bafc12ca7a55595d5ee9b75204a # 2.1.0
-              with:
-                  path: release-assets/check.sha256
-
-            - name: Create Tag/Commit Subject (Base64)
+            - name: Create checksums for artifacts and release tag (jq)
               id: tag_subject
               shell: bash
+              working-directory: release-assets
               run: |
-                  set -euo pipefail
-                  
-                  NAME="git+https://github.com/${{ github.repository }}@refs/tags/${{ github.event.release.tag_name }}"
-                  COMMIT_SHA="${{ github.sha }}"
-                  DIGEST_HEX=`printf '%s' "${COMMIT_SHA}" | sha256sum | cut -d' ' -f1`
-                  SUBJECT_B64=`printf '[{"name":"%s","digest":{"sha256":"%s"}}]' "${NAME}" "${DIGEST_HEX}" | base64 -w0`
-                  
-                  f=`mktemp`
-                  printf '%s' "${SUBJECT_B64}" > "$f"
-                  echo "handle=$f" >> "$GITHUB_OUTPUT"
+                set -euo pipefail
+
+                NAME="git+https://github.com/${{ github.repository }}@refs/tags/${{ github.event.release.tag_name }}"
+                DIGEST_HEX=`printf '%s' "${{ github.sha }}" | sha256sum | cut -d' ' -f1`
+
+                tmp_json=`mktemp`
+
+                # 1) Start JSON array with the tag/commit subject
+                jq -n --arg name "$NAME" --arg sha "$DIGEST_HEX" \
+                  '[{"name":$name,"digest":{"sha256":$sha}}]' > "$tmp_json"
+
+                # 2) Build file subjects safely (NUL-separated), convert to JSON via jq, append
+                files_json=`mktemp`
+                LC_ALL=C find . -maxdepth 1 -type f -printf '%P\0' \
+                  | sort -z \
+                  | xargs -0 -I{} sh -c 'h=`sha256sum -- "{}" | cut -d" " -f1`; printf "%s\0%s\0" "$h" "{}"' \
+                  | jq -Rs '
+                      (split("\u0000") | .[:-1])                                # drop trailing empty element
+                      | [ range(0; length; 2) as $i
+                          | { "name": .[$i+1], "digest": { "sha256": .[$i] } }
+                        ]
+                    ' > "$files_json"
+
+                # 3) Merge arrays
+                jq -s 'add' "$tmp_json" "$files_json" > "$tmp_json.merged" && mv "$tmp_json.merged" "$tmp_json"
+
+                # 4) Base64-encode once and output handle
+                b64=`mktemp`
+                base64 -w0 < "$tmp_json" > "$b64"
+                echo "handle=$b64" >> "$GITHUB_OUTPUT"
 
     AssetProvenance:
         permissions:
@@ -123,8 +125,7 @@ jobs:
         needs: ChecksumReleaseAssets
         uses: slsa-framework/slsa-github-generator/.github/workflows/generator_generic_slsa3.yml@v2.1.0 #must have semver!
         with:
-            base64-subjects-as-file: |
+            base64-subjects: |
                 ${{ needs.ChecksumReleaseAssets.outputs.hashBase64File }}
-                ${{ needs.ChecksumReleaseAssets.outputs.tagSubjectsFile }}
             upload-assets: true
             upload-tag-name: "${{ github.event.release.tag_name }}"
