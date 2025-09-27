@@ -82,7 +82,7 @@ jobs:
                   ls -lah
 
             - name: Create checksums for artifacts and release tag (jq)
-              id: tag_subject
+              id: hashes
               shell: bash
               working-directory: release-assets
               run: |
