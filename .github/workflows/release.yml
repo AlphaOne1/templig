@@ -65,8 +65,7 @@ jobs:
             - name: Checkout
               uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
               with:
-                  fetch-depth: 0
-                  ref: ${{ github.event.release.tag_name }}
+                  fetch-depth: 1
 
             - name: Download all release assets via GitHub CLI
               env:
@@ -81,41 +80,23 @@ jobs:
                   echo "Downloaded assets:"
                   ls -lah
 
-            - name: Create checksums for artifacts and release tag (jq)
-              id: hashes
-              shell: bash
+            - name: Generate Checksums
               working-directory: release-assets
               run: |
-                set -euo pipefail
+                  set -euo pipefail
+                  
+                  # Robustly hash all regular files in this directory, then base64 and write via tee.
+                  LC_ALL=C find . -maxdepth 1 -type f -printf '%P\0' \
+                    | sort -z \
+                    | xargs -0 sha256sum -- \
+                    | base64 -w0 \
+                    > check.sha256
 
-                NAME="git+https://github.com/${{ github.repository }}@refs/tags/${{ github.event.release.tag_name }}"
-                DIGEST_HEX=`printf '%s' "${{ github.sha }}" | sha256sum | cut -d' ' -f1`
-
-                tmp_json=`mktemp`
-
-                # 1) Start JSON array with the tag/commit subject
-                jq -n --arg name "$NAME" --arg sha "$DIGEST_HEX" \
-                  '[{"name":$name,"digest":{"sha256":$sha}}]' > "$tmp_json"
-
-                # 2) Build file subjects safely (NUL-separated), convert to JSON via jq, append
-                files_json=`mktemp`
-                LC_ALL=C find . -maxdepth 1 -type f -printf '%P\0' \
-                  | sort -z \
-                  | xargs -0 -I{} sh -c 'h=`sha256sum -- "{}" | cut -d" " -f1`; printf "%s\0%s\0" "$h" "{}"' \
-                  | jq -Rs '
-                      (split("\u0000") | .[:-1])                                # drop trailing empty element
-                      | [ range(0; length; 2) as $i
-                          | { "name": .[$i+1], "digest": { "sha256": .[$i] } }
-                        ]
-                    ' > "$files_json"
-
-                # 3) Merge arrays
-                jq -s 'add' "$tmp_json" "$files_json" > "$tmp_json.merged" && mv "$tmp_json.merged" "$tmp_json"
-
-                # 4) Base64-encode once and output handle
-                b64=`mktemp`
-                base64 -w0 < "$tmp_json" > "$b64"
-                echo "handle=$b64" >> "$GITHUB_OUTPUT"
+            - name: Upload Checksums
+              id: hashes
+              uses: slsa-framework/slsa-github-generator/actions/generator/generic/create-base64-subjects-from-file@f7dd8c54c2067bafc12ca7a55595d5ee9b75204a # 2.1.0
+              with:
+                  path: release-assets/check.sha256
 
     AssetProvenance:
         permissions:
@@ -125,7 +106,7 @@ jobs:
         needs: ChecksumReleaseAssets
         uses: slsa-framework/slsa-github-generator/.github/workflows/generator_generic_slsa3.yml@v2.1.0 #must have semver!
         with:
-            base64-subjects-as-file: |
+            base64-subjects: |
                 ${{ needs.ChecksumReleaseAssets.outputs.hashBase64File }}
             upload-assets: true
             upload-tag-name: "${{ github.event.release.tag_name }}"
