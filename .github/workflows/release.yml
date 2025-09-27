@@ -35,7 +35,8 @@ jobs:
               shell: bash
               run: |
                   set -euo pipefail
-                  TAG="${{ github.event.release.tag_name }}"
+                  
+                  TAG=`echo "${{ github.event.release.tag_name }}" | sed 's/\//-/g'`
                   git archive \
                     --format=tar.gz \
                     --prefix="templig-src-${TAG}/" \
