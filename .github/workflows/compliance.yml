@@ -78,7 +78,6 @@ jobs:
                   set -euo pipefail
                   missing=""
                   
-                  # Include merge commits as well (their message may carry DCO)
                   while read -r sha
                   do
                       [ -n "$sha" ] || continue

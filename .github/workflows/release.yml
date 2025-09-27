@@ -41,7 +41,7 @@ jobs:
                     --format=tar.gz \
                     --prefix="templig-src-${TAG}/" \
                     --output="templig-src-${TAG}.tar.gz" \
-                    "${TAG}"
+                    "${{ github.event.release.tag_name }}"
 
             - name: Upload Release (via GitHub CLI)
               env:
