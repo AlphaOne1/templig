@@ -14,7 +14,9 @@ func TestMainGood(t *testing.T) {
 	main()
 }
 
-func TestMainBad( /* t */ *testing.T) {
+func TestMainBad(t *testing.T) {
+	t.Parallel()
+
 	os.Args = []string{"main"}
 	main()
 }

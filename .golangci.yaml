@@ -80,9 +80,6 @@ linters:
             ignored-numbers:
                 - "2"
 
-        paralleltest:
-            ignore-missing: true
-
         perfsprint:
             errorf: false
 
