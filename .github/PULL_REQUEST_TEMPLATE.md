@@ -17,7 +17,7 @@ You can erase any parts of this template not applicable to your Pull Request.
 
 1. [ ] Did you add tests for the new features that cover all major code paths?
 2. [ ] Does your submission pass tests?
-3. [ ] Have you lint your code locally before submission?
+3. [ ] Have you linted your code locally before submission?
 
 **What is the new behavior (if this is a feature change)?**
 
