@@ -53,8 +53,8 @@ we're different. The strength of *templig* comes from its varied community,
 people from a wide range of backgrounds. Different people have different
 perspectives on issues. Being unable to understand why someone holds a viewpoint
 doesn't mean that they're wrong. Don't forget that it is human to make errors,
-and blaming each other doesn't get us anywhere. Rather offer to help to resolve
-issues and to help learn from mistakes.
+and blaming each other doesn't get us anywhere. Rather, offer to help resolve
+issues and learn from mistakes.
 
 *Original text courtesy of the
 [Speak Up! project](http://web.archive.org/web/20141109123859/http://speakup.io/coc.html).*
