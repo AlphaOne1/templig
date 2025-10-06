@@ -33,15 +33,14 @@ jobs:
                 fetch-depth: 1
 
           - name: REUSE Compliance Check
-            uses: fsfe/reuse-action@bb774aa972c2a89ff34781233d275075cbddf542 #v5.0.0
+            uses: fsfe/reuse-action@676e2d560c9a403aa252096d99fcab3e1132b0f5 #v6.0.0
 
     CheckSignedOffCommit:
         if: >
           github.event_name == 'push' &&
-          !startsWith(github.actor, 'dependabot') &&
-          github.event.pusher.name != 'web-flow' &&
-          github.event.pusher.name != 'github-actions[bot]' &&
-          github.event.pusher.name != 'github-merge-queue[bot]'
+          !contains(github.actor, '[bot]') &&
+          !contains(github.event.pusher.name, '[bot]') &&
+          github.event.pusher.name != 'web-flow'
         runs-on: ubuntu-latest
         permissions:
             contents: read
@@ -81,12 +80,29 @@ jobs:
                   while read -r sha
                   do
                       [ -n "$sha" ] || continue
+                      
+                      # Skip commits from bots
+                      committer_name=`git log --format=%cn -n 1 "$sha"`
+                      committer_email=`git log --format=%ce -n 1 "$sha"`
+                      if    echo "$committer_name" | grep -Fq '[bot]' \
+                         || [ "$committer_name" = "web-flow" ]        \
+                         || echo "$committer_email" | grep -Eqi 'noreply@github\.com$|@users\.noreply\.github\.com$'
+                      then
+                          echo "Skipping commit $sha from $committer_name <$committer_email>"
+                          continue
+                      fi
+                      
                       msg=`git log --format=%B -n 1 "$sha"`
                   
                       if ! printf '%s' "$msg" | grep -Eqi '^[[:space:]]*Signed[- ]off[- ]by:'
                       then
                           echo "Commit $sha missing Signed-off-by"
                           missing="true"
+                  
+                          echo "Committer name:           $committer_name"
+                          echo "Committer email:          $committer_email"
+                          echo "github.actor:             ${{ github.actor }}"
+                          echo "github.event.pusher.name: ${{ github.event.pusher.name }}"
                       fi
                   done < shas.txt
                   
@@ -136,12 +152,29 @@ jobs:
                 while read -r sha
                 do
                     [ -n "$sha" ] || continue
+                    
+                    # Skip commits from bots
+                    committer_name=`git log --format=%cn -n 1 "$sha"`
+                    committer_email=`git log --format=%ce -n 1 "$sha"`
+                    if    echo "$committer_name" | grep -Fq '[bot]' \
+                       || [ "$committer_name" = "web-flow" ]        \
+                       || echo "$committer_email" | grep -Eqi 'noreply@github\.com$|@users\.noreply\.github\.com$'
+                    then
+                        echo "Skipping commit $sha from $committer_name <$committer_email>"
+                        continue
+                    fi
+                    
                     msg=`git log --format=%B -n 1 "$sha"`
                 
                     if ! printf '%s' "$msg" | grep -Eqi '^[[:space:]]*Signed[- ]off[- ]by:'
                     then
                         echo "Commit $sha missing Signed-off-by"
                         missing="true"
+                
+                        echo "Committer name:           $committer_name"
+                        echo "Committer email:          $committer_email"
+                        echo "github.actor:             ${{ github.actor }}"
+                        echo "github.event.pusher.name: ${{ github.event.pusher.name }}"
                     fi
                 done < shas.txt
 
