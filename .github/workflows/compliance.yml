@@ -86,7 +86,7 @@ jobs:
                       committer_email=`git log --format=%ce -n 1 "$sha"`
                       if    echo "$committer_name" | grep -Fq '[bot]' \
                          || [ "$committer_name" = "web-flow" ]        \
-                         || echo "$committer_email" | grep -Fqi 'noreply@github.com'
+                         || echo "$committer_email" | grep -Eqi 'noreply@github\.com$|@users\.noreply\.github\.com$'
                       then
                           echo "Skipping commit $sha from $committer_name <$committer_email>"
                           continue
@@ -158,7 +158,7 @@ jobs:
                     committer_email=`git log --format=%ce -n 1 "$sha"`
                     if    echo "$committer_name" | grep -Fq '[bot]' \
                        || [ "$committer_name" = "web-flow" ]        \
-                       || echo "$committer_email" | grep -Fqi 'noreply@github.com'
+                       || echo "$committer_email" | grep -Eqi 'noreply@github\.com$|@users\.noreply\.github\.com$'
                     then
                         echo "Skipping commit $sha from $committer_name <$committer_email>"
                         continue
