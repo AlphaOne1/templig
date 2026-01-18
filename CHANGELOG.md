@@ -6,12 +6,12 @@ Release 0.9.0
 
 - introduced `Config.SetSecretRE` to allow users to define their own secret regex
   per instance
-- extended `HideSecrets` to now need a regexp to match secrets, the old behavior
+- extended `HideSecrets` to now need a regex to match secrets, the old behavior
   can be achieved as follows:
 
   ```go
   func HideSecretsOld(node *yaml.Node, hideStructure bool) {
-      HideSecrets(node, hideStructure, templig.SecretRE)
+      HideSecrets(node, hideStructure, regexp.MustCompile(templig.SecretDefaultRE))
   }
   ```
 

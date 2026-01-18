@@ -56,7 +56,9 @@ func (c *Config[T]) overlay(r io.Reader) error {
 		return aErr
 	}
 
-	c.SetSecretRE(additionalConfig.secretRE)
+	if err := c.SetSecretRE(additionalConfig.secretRE); err != nil {
+		return err
+	}
 
 	if c.node == nil {
 		c.node = additionalConfig.Get()
@@ -90,7 +92,10 @@ func (c *Config[T]) overlayFile(path string) error {
 // runs - if necessary - the contained template functions.
 func fromSingle[T any](r io.Reader) (*Config[T], error) {
 	var config Config[T]
-	config.SetSecretRE(SecretRE)
+
+	if err := config.SetSecretRE(SecretRE); err != nil {
+		return nil, err
+	}
 
 	fileContent, err := io.ReadAll(r)
 
@@ -318,6 +323,7 @@ func (c *Config[T]) ToFile(path string) error {
 // SecretRE returns a copy of the regular expression used for hiding secrets of that specific instance.
 func (c *Config[T]) SecretRE() *regexp.Regexp {
 	tmp := *c.secretRE
+
 	return &tmp
 }
 

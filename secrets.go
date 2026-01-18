@@ -25,8 +25,8 @@ type secretWorkItem struct {
 }
 
 // HideSecrets hides secrets in the given YAML node structure.
-// Secrets are identified using the given `secretRE` parameter. If that parameter is nil, [SecretRE] is used instead
-// to prevent silent complete failures to hide secrets.
+// Secrets are identified using the given `secretRE` parameter. If that parameter is nil, [SecretDefaultRE] is used
+// instead to construct a new regexp to prevent silent complete failures to hide secrets.
 // Depending on the parameter `hideStructure`, the structure of the secret is hidden too (`true`) or visible (`false`).
 func HideSecrets(node *yaml.Node, hideStructure bool, secretRE *regexp.Regexp) {
 	// initialWorkQueueDepth is an assumption about the maximum depth of the YAML document structure. It will not limit
@@ -35,7 +35,7 @@ func HideSecrets(node *yaml.Node, hideStructure bool, secretRE *regexp.Regexp) {
 	const queueCompactionFrequency = 100
 
 	if secretRE == nil {
-		secretRE = SecretRE
+		secretRE = regexp.MustCompile(SecretDefaultRE)
 	}
 
 	workQueue := make([]secretWorkItem, 1, initialWorkQueueDepth)

@@ -758,21 +758,21 @@ func TestSetSecretRE(t *testing.T) {
 	t.Parallel()
 
 	const testRE = `(?i)name`
-	c, _ := templig.FromFile[TestConfig]("testData/test_config_0.yaml")
+	config, _ := templig.FromFile[TestConfig]("testData/test_config_0.yaml")
 
 	newRE := regexp.MustCompile(testRE)
 
-	if err := c.SetSecretRE(newRE); err != nil {
+	if err := config.SetSecretRE(newRE); err != nil {
 		t.Errorf("could not set secret regex: %v", err)
 	}
 
-	if got := c.SecretRE(); got.String() != testRE {
+	if got := config.SecretRE(); got.String() != testRE {
 		t.Errorf("did not get the regexp that was set before, got `%v`", got.String())
 	}
 
 	buf := bytes.Buffer{}
 
-	if err := c.ToSecretsHidden(&buf); err != nil {
+	if err := config.ToSecretsHidden(&buf); err != nil {
 		t.Errorf("could not generate secrets-hidden config")
 	}
 
