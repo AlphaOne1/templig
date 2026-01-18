@@ -26,7 +26,7 @@ type secretWorkItem struct {
 
 // HideSecrets hides secrets in the given YAML node structure. Secrets are identified using the [SecretRE].
 // Depending on the parameter `hideStructure`, the structure of the secret is hidden too (`true`) or visible (`false`).
-func HideSecrets(node *yaml.Node, hideStructure bool) {
+func HideSecrets(node *yaml.Node, hideStructure bool, secretRE *regexp.Regexp) {
 	// initialWorkQueueDepth is an assumption about the maximum depth of the YAML document structure. It will not limit
 	// the real depth, but should, for average use cases of templig, be enough.
 	const initialWorkQueueDepth = 20
@@ -52,7 +52,7 @@ func HideSecrets(node *yaml.Node, hideStructure bool) {
 		if currentWork.secret {
 			newWork = hideAll(currentWork.node, hideStructure)
 		} else {
-			newWork = hideSecrets(currentWork.node)
+			newWork = hideSecrets(currentWork.node, secretRE)
 		}
 
 		if len(newWork) > 0 {
@@ -68,7 +68,7 @@ func HideSecrets(node *yaml.Node, hideStructure bool) {
 // Mapping nodes are handled differently due to their structured key-value pair content.
 // Non-mapping nodes' content is scanned and added to the result with the secret flag set to false.
 // Returns nil if the provided YAML node is nil.
-func hideSecrets(node *yaml.Node) []secretWorkItem {
+func hideSecrets(node *yaml.Node, secretRE *regexp.Regexp) []secretWorkItem {
 	if node == nil {
 		return nil
 	}
@@ -82,7 +82,7 @@ func hideSecrets(node *yaml.Node) []secretWorkItem {
 		// The content is a sequence of key-value pairs, thus the content length is even.
 		// Subtracting 1 in the check accounts for potential uneven (invalid) content length.
 		for i := 0; i+1 < len(node.Content); i += 2 {
-			if SecretRE.MatchString(node.Content[i].Value) {
+			if secretRE.MatchString(node.Content[i].Value) {
 				result = append(result, secretWorkItem{
 					node:   node.Content[i+1],
 					secret: true,

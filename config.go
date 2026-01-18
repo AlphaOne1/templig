@@ -11,13 +11,13 @@ import (
 	"io"
 	"os"
 	"path/filepath"
+	"regexp"
 	"text/template"
 
 	"go.yaml.in/yaml/v4"
 )
 
 var (
-
 	// ErrNoConfigReaders indicates that no configuration readers were provided to the function.
 	ErrNoConfigReaders = errors.New("no configuration readers given")
 
@@ -33,8 +33,9 @@ type Validator interface {
 
 // Config is the generic structure holding the configuration information for the specified type.
 type Config[T any] struct {
-	node    *yaml.Node
-	content T
+	node     *yaml.Node
+	content  T
+	secretRE *regexp.Regexp
 }
 
 // Get gives a pointer to the deserialized configuration. Get does not load the configuration anew and
@@ -51,6 +52,8 @@ func (c *Config[T]) overlay(r io.Reader) error {
 	if aErr != nil {
 		return aErr
 	}
+
+	c.SetSecretRE(a.secretRE)
 
 	if c.node == nil {
 		c.node = a.Get()
@@ -84,6 +87,8 @@ func (c *Config[T]) overlayFile(path string) error {
 // runs - if necessary - the contained template functions.
 func fromSingle[T any](r io.Reader) (*Config[T], error) {
 	var config Config[T]
+	config.SetSecretRE(SecretRE)
+
 	fileContent, err := io.ReadAll(r)
 
 	if err != nil {
@@ -194,7 +199,7 @@ func (c *Config[T]) ToSecretsHidden(w io.Writer) error {
 	encodeErr := node.Encode(c.content)
 
 	if encodeErr == nil {
-		HideSecrets(&node, true)
+		HideSecrets(&node, true, c.secretRE)
 		enc := yaml.NewEncoder(w)
 		writeErr = enc.Encode(node)
 		encCloseErr = enc.Close()
@@ -228,7 +233,7 @@ func (c *Config[T]) ToSecretsHiddenStructured(w io.Writer) error {
 	encodeErr := node.Encode(c.content)
 
 	if encodeErr == nil {
-		HideSecrets(&node, false)
+		HideSecrets(&node, false, c.secretRE)
 		enc := yaml.NewEncoder(w)
 		writeErr = enc.Encode(node)
 		encCloseErr = enc.Close()
@@ -305,4 +310,9 @@ func (c *Config[T]) ToFile(path string) error {
 	defer func() { _ = f.Close() }()
 
 	return c.To(f)
+}
+
+// SetSecretRE sets the regular expression to be used for hiding secrets of that specific instance.
+func (c *Config[T]) SetSecretRE(re *regexp.Regexp) {
+	c.secretRE = re
 }

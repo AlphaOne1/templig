@@ -269,7 +269,7 @@ func TestHideSecrets(t *testing.T) {
 				return
 			}
 
-			templig.HideSecrets(&node, test.hideStructure)
+			templig.HideSecrets(&node, test.hideStructure, templig.SecretRE)
 
 			if err := yaml.NewEncoder(&gotBuf).Encode(&node); err != nil {
 				t.Errorf("%v: Got error serializing got", testNum)
@@ -290,7 +290,7 @@ func TestHideSecretsNil(t *testing.T) {
 
 	var a *yaml.Node
 
-	templig.HideSecrets(a, true)
+	templig.HideSecrets(a, true, templig.SecretRE)
 }
 
 func TestHideSecretAlias(t *testing.T) {
@@ -315,7 +315,7 @@ pass: *ref
 
 	buf := bytes.Buffer{}
 
-	templig.HideSecrets(node, true)
+	templig.HideSecrets(node, true, templig.SecretRE)
 
 	if encodeErr := yaml.NewEncoder(&buf).Encode(node); encodeErr != nil {
 		t.Errorf("could not encode node: %v", encodeErr)
