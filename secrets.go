@@ -35,6 +35,8 @@ func HideSecrets(node *yaml.Node, hideStructure bool, secretRE *regexp.Regexp) {
 	const queueCompactionFrequency = 100
 
 	if secretRE == nil {
+		// we create a new regexp, as we cannot enforce, that nobody changed the SecretRE. This is unlike other
+		// functions, like Config.SetSecretRE, that have errors indicating a wrongful usage.
 		secretRE = regexp.MustCompile(SecretDefaultRE)
 	}
 

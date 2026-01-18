@@ -185,7 +185,8 @@ func (c *Config[T]) To(w io.Writer) error {
 	return errors.Join(err, encCloseErr)
 }
 
-// ToSecretsHidden writes the configuration to the given io.Writer and hides secret values using the [SecretRE].
+// ToSecretsHidden writes the configuration to the given io.Writer and hides secret values using [SecretRE] of the
+// initialization time of the instance if not set to another value using `SetSecretRE`.
 // Strings are replaced with the number of * corresponding to their length.
 // Substructures containing secrets are replaced with a single '*'.
 // The following example
@@ -322,6 +323,10 @@ func (c *Config[T]) ToFile(path string) error {
 
 // SecretRE returns a copy of the regular expression used for hiding secrets of that specific instance.
 func (c *Config[T]) SecretRE() *regexp.Regexp {
+	if c.secretRE == nil {
+		return nil
+	}
+
 	tmp := *c.secretRE
 
 	return &tmp
