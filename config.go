@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: 2025 The templig contributors.
+// SPDX-FileCopyrightText: 2026 The templig contributors.
 // SPDX-License-Identifier: MPL-2.0
 
 // Package templig is the main package of the configuration library.
