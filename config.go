@@ -23,6 +23,9 @@ var (
 
 	// ErrNoConfigPaths indicates that no configuration file paths were provided where at least one is required.
 	ErrNoConfigPaths = errors.New("no configuration paths given")
+
+	// ErrNoSecretRegexp indicates that no secret regular expression was provided where one is required.
+	ErrNoSecretRegexp = errors.New("no secret regular expression given")
 )
 
 // Validator is the interface to facility validity checks on configuration types.
@@ -312,7 +315,19 @@ func (c *Config[T]) ToFile(path string) error {
 	return c.To(f)
 }
 
-// SetSecretRE sets the regular expression to be used for hiding secrets of that specific instance.
-func (c *Config[T]) SetSecretRE(re *regexp.Regexp) {
+// SecretRE returns a copy of the regular expression used for hiding secrets of that specific instance.
+func (c *Config[T]) SecretRE() *regexp.Regexp {
+	tmp := *c.secretRE
+	return &tmp
+}
+
+// SetSecretRE sets the regular expression to be used for hiding secrets of that specific instance. It must not be nil.
+func (c *Config[T]) SetSecretRE(re *regexp.Regexp) error {
+	if re == nil {
+		return ErrNoSecretRegexp
+	}
+
 	c.secretRE = re
+
+	return nil
 }

@@ -60,6 +60,7 @@ func TestHideSecrets(t *testing.T) {
 	tests := []struct {
 		in            any
 		want          any
+		secretRE      *regexp.Regexp
 		hideStructure bool
 	}{
 		{ // 0
@@ -251,6 +252,16 @@ func TestHideSecrets(t *testing.T) {
 			},
 			hideStructure: false,
 		},
+		{ // 14
+			in: map[string]any{
+				"Hello": "World",
+			},
+			want: map[string]any{
+				"Hello": "*****",
+			},
+			hideStructure: true,
+			secretRE:      regexp.MustCompile(`(?i)hello`),
+		},
 	}
 
 	for testNum, test := range tests {
@@ -269,7 +280,7 @@ func TestHideSecrets(t *testing.T) {
 				return
 			}
 
-			templig.HideSecrets(&node, test.hideStructure, templig.SecretRE)
+			templig.HideSecrets(&node, test.hideStructure, test.secretRE)
 
 			if err := yaml.NewEncoder(&gotBuf).Encode(&node); err != nil {
 				t.Errorf("%v: Got error serializing got", testNum)

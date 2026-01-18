@@ -428,6 +428,6 @@ different value. It also can be set for each `Config` instance using the `SetSec
 tokens, one could use the following (with `SecretDefaultRE` containing the original regular expression text):
 
 ```go
-c, _ templig.FromFile[Config]("my_config.yaml")
+c, _ := templig.FromFile[Config]("my_config.yaml")
 c.SetSecretRE(regexp.MustCompile(templig.SecretDefaultRE + "|token"))
 ```

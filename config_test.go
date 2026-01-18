@@ -8,6 +8,7 @@ import (
 	"errors"
 	"fmt"
 	"os"
+	"regexp"
 	"slices"
 	"strings"
 	"testing"
@@ -750,5 +751,46 @@ func TestReadConfigValidated(t *testing.T) {
 				}
 			}
 		})
+	}
+}
+
+func TestSetSecretRE(t *testing.T) {
+	t.Parallel()
+
+	const testRE = `(?i)name`
+	c, _ := templig.FromFile[TestConfig]("testData/test_config_0.yaml")
+
+	newRE := regexp.MustCompile(testRE)
+
+	if err := c.SetSecretRE(newRE); err != nil {
+		t.Errorf("could not set secret regex: %v", err)
+	}
+
+	if got := c.SecretRE(); got.String() != testRE {
+		t.Errorf("did not get the regexp that was set before, got `%v`", got.String())
+	}
+
+	buf := bytes.Buffer{}
+
+	if err := c.ToSecretsHidden(&buf); err != nil {
+		t.Errorf("could not generate secrets-hidden config")
+	}
+
+	if strings.Contains(buf.String(), "Name0") {
+		t.Errorf("found secrets in normally secrets-hidden output")
+	}
+
+	if !strings.Contains(buf.String(), "name: '*****'") {
+		t.Errorf("did not find replaced name secret:\n%v", buf.String())
+	}
+}
+
+func TestSetSecretRENil(t *testing.T) {
+	t.Parallel()
+
+	c, _ := templig.FromFile[TestConfig]("testData/test_config_0.yaml")
+
+	if err := c.SetSecretRE(nil); err == nil {
+		t.Errorf("setting secret regex to nil should return an error")
 	}
 }

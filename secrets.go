@@ -24,13 +24,19 @@ type secretWorkItem struct {
 	secret bool
 }
 
-// HideSecrets hides secrets in the given YAML node structure. Secrets are identified using the [SecretRE].
+// HideSecrets hides secrets in the given YAML node structure.
+// Secrets are identified using the given `secretRE` parameter. If that parameter is nil, [SecretRE] is used instead
+// to prevent silent complete failures to hide secrets.
 // Depending on the parameter `hideStructure`, the structure of the secret is hidden too (`true`) or visible (`false`).
 func HideSecrets(node *yaml.Node, hideStructure bool, secretRE *regexp.Regexp) {
 	// initialWorkQueueDepth is an assumption about the maximum depth of the YAML document structure. It will not limit
 	// the real depth, but should, for average use cases of templig, be enough.
 	const initialWorkQueueDepth = 20
 	const queueCompactionFrequency = 100
+
+	if secretRE == nil {
+		secretRE = SecretRE
+	}
 
 	workQueue := make([]secretWorkItem, 1, initialWorkQueueDepth)
 	workQueue[0] = secretWorkItem{
@@ -75,7 +81,7 @@ func hideSecrets(node *yaml.Node, secretRE *regexp.Regexp) []secretWorkItem {
 
 	var result []secretWorkItem
 
-	// just mapping nodes need special handling, is this step
+	// just mapping nodes need special handling in this step
 	if node.Kind == yaml.MappingNode {
 		result = make([]secretWorkItem, 0, len(node.Content)/2)
 
