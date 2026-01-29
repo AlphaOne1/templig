@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: 2025 The templig contributors.
+// SPDX-FileCopyrightText: 2026 The templig contributors.
 // SPDX-License-Identifier: MPL-2.0
 
 package templig_test
@@ -60,6 +60,7 @@ func TestHideSecrets(t *testing.T) {
 	tests := []struct {
 		in            any
 		want          any
+		secretRE      *regexp.Regexp
 		hideStructure bool
 	}{
 		{ // 0
@@ -251,6 +252,16 @@ func TestHideSecrets(t *testing.T) {
 			},
 			hideStructure: false,
 		},
+		{ // 14
+			in: map[string]any{
+				"Hello": "World",
+			},
+			want: map[string]any{
+				"Hello": "*****",
+			},
+			hideStructure: true,
+			secretRE:      regexp.MustCompile(`(?i)hello`),
+		},
 	}
 
 	for testNum, test := range tests {
@@ -269,7 +280,7 @@ func TestHideSecrets(t *testing.T) {
 				return
 			}
 
-			templig.HideSecrets(&node, test.hideStructure)
+			templig.HideSecrets(&node, test.hideStructure, test.secretRE)
 
 			if err := yaml.NewEncoder(&gotBuf).Encode(&node); err != nil {
 				t.Errorf("%v: Got error serializing got", testNum)
@@ -290,7 +301,7 @@ func TestHideSecretsNil(t *testing.T) {
 
 	var a *yaml.Node
 
-	templig.HideSecrets(a, true)
+	templig.HideSecrets(a, true, templig.SecretRE)
 }
 
 func TestHideSecretAlias(t *testing.T) {
@@ -315,7 +326,7 @@ pass: *ref
 
 	buf := bytes.Buffer{}
 
-	templig.HideSecrets(node, true)
+	templig.HideSecrets(node, true, templig.SecretRE)
 
 	if encodeErr := yaml.NewEncoder(&buf).Encode(node); encodeErr != nil {
 		t.Errorf("could not encode node: %v", encodeErr)

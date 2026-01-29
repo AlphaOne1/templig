@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: 2025 The templig contributors.
+// SPDX-FileCopyrightText: 2026 The templig contributors.
 // SPDX-License-Identifier: MPL-2.0
 
 // Package templig is the main package of the configuration library.
@@ -11,18 +11,21 @@ import (
 	"io"
 	"os"
 	"path/filepath"
+	"regexp"
 	"text/template"
 
 	"go.yaml.in/yaml/v4"
 )
 
 var (
-
 	// ErrNoConfigReaders indicates that no configuration readers were provided to the function.
 	ErrNoConfigReaders = errors.New("no configuration readers given")
 
 	// ErrNoConfigPaths indicates that no configuration file paths were provided where at least one is required.
 	ErrNoConfigPaths = errors.New("no configuration paths given")
+
+	// ErrNoSecretRegexp indicates that no secret regular expression was provided where one is required.
+	ErrNoSecretRegexp = errors.New("no secret regular expression given")
 )
 
 // Validator is the interface to facility validity checks on configuration types.
@@ -33,8 +36,9 @@ type Validator interface {
 
 // Config is the generic structure holding the configuration information for the specified type.
 type Config[T any] struct {
-	node    *yaml.Node
-	content T
+	node     *yaml.Node
+	content  T
+	secretRE *regexp.Regexp
 }
 
 // Get gives a pointer to the deserialized configuration. Get does not load the configuration anew and
@@ -46,16 +50,20 @@ func (c *Config[T]) Get() *T {
 // overlay is called repeatedly and overlays the current intermediate configuration
 // with the content of the given io.Reader.
 func (c *Config[T]) overlay(r io.Reader) error {
-	a, aErr := fromSingle[yaml.Node](r)
+	additionalConfig, aErr := fromSingle[yaml.Node](r)
 
 	if aErr != nil {
 		return aErr
 	}
 
+	if err := c.SetSecretRE(additionalConfig.secretRE); err != nil {
+		return err
+	}
+
 	if c.node == nil {
-		c.node = a.Get()
+		c.node = additionalConfig.Get()
 	} else {
-		merged, mergeErr := MergeYAMLNodes(c.node, a.Get())
+		merged, mergeErr := MergeYAMLNodes(c.node, additionalConfig.Get())
 
 		if mergeErr != nil {
 			return mergeErr
@@ -84,6 +92,11 @@ func (c *Config[T]) overlayFile(path string) error {
 // runs - if necessary - the contained template functions.
 func fromSingle[T any](r io.Reader) (*Config[T], error) {
 	var config Config[T]
+
+	if err := config.SetSecretRE(SecretRE); err != nil {
+		return nil, err
+	}
+
 	fileContent, err := io.ReadAll(r)
 
 	if err != nil {
@@ -172,7 +185,8 @@ func (c *Config[T]) To(w io.Writer) error {
 	return errors.Join(err, encCloseErr)
 }
 
-// ToSecretsHidden writes the configuration to the given io.Writer and hides secret values using the [SecretRE].
+// ToSecretsHidden writes the configuration to the given io.Writer and hides secret values using [SecretRE] of the
+// initialization time of the instance if not set to another value using `SetSecretRE`.
 // Strings are replaced with the number of * corresponding to their length.
 // Substructures containing secrets are replaced with a single '*'.
 // The following example
@@ -194,7 +208,7 @@ func (c *Config[T]) ToSecretsHidden(w io.Writer) error {
 	encodeErr := node.Encode(c.content)
 
 	if encodeErr == nil {
-		HideSecrets(&node, true)
+		HideSecrets(&node, true, c.secretRE)
 		enc := yaml.NewEncoder(w)
 		writeErr = enc.Encode(node)
 		encCloseErr = enc.Close()
@@ -228,7 +242,7 @@ func (c *Config[T]) ToSecretsHiddenStructured(w io.Writer) error {
 	encodeErr := node.Encode(c.content)
 
 	if encodeErr == nil {
-		HideSecrets(&node, false)
+		HideSecrets(&node, false, c.secretRE)
 		enc := yaml.NewEncoder(w)
 		writeErr = enc.Encode(node)
 		encCloseErr = enc.Close()
@@ -305,4 +319,26 @@ func (c *Config[T]) ToFile(path string) error {
 	defer func() { _ = f.Close() }()
 
 	return c.To(f)
+}
+
+// SecretRE returns a copy of the regular expression used for hiding secrets of that specific instance.
+func (c *Config[T]) SecretRE() *regexp.Regexp {
+	if c.secretRE == nil {
+		return nil
+	}
+
+	tmp := *c.secretRE
+
+	return &tmp
+}
+
+// SetSecretRE sets the regular expression to be used for hiding secrets of that specific instance. It must not be nil.
+func (c *Config[T]) SetSecretRE(re *regexp.Regexp) error {
+	if re == nil {
+		return ErrNoSecretRegexp
+	}
+
+	c.secretRE = re
+
+	return nil
 }

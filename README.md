@@ -422,3 +422,12 @@ plain text to any location.
 Single secrets are always replaced by a string of `*` of equal length until a length of 32. Secrets longer than 32
 characters are replaced by a string of `**` followed by the number of characters and a final `**`, e.g. `**42**`.
 An example usage can be found [here](examples/templating/env).
+
+The regular expression used to identify secrets to hide can be changed globally setting `templig.SecretRE` to a
+different value. It also can be set for each `Config` instance using the `SetSecretRE` method. To hide, e.g., also
+tokens, one could use the following (with `SecretDefaultRE` containing the original regular expression text):
+
+```go
+c, _ := templig.FromFile[Config]("my_config.yaml")
+c.SetSecretRE(regexp.MustCompile(templig.SecretDefaultRE + "|token"))
+```

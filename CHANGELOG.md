@@ -1,6 +1,24 @@
 <!-- SPDX-FileCopyrightText: 2025 The templig contributors.
      SPDX-License-Identifier: MPL-2.0
 -->
+Release 0.9.0
+=============
+
+- introduced `Config.SetSecretRE` to allow users to define their own secret regex
+  per instance
+- extended `HideSecrets` to now need a regex to match secrets, the old behavior
+  can be achieved as follows:
+
+  ```go
+  func HideSecretsOld(node *yaml.Node, hideStructure bool) {
+      HideSecrets(node, hideStructure, regexp.MustCompile(templig.SecretDefaultRE))
+  }
+  ```
+
+  As we did not yet reach version 1.0, this breaking change is acceptable. Note that
+  from version 1.0 on, this would not be accepted.
+- dependency updates
+
 Release 0.8.4
 =============
 
