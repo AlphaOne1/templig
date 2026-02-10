@@ -794,3 +794,26 @@ func TestSetSecretRENil(t *testing.T) {
 		t.Errorf("setting secret regex to nil should return an error")
 	}
 }
+
+func TestReadSecretRENil(t *testing.T) {
+	t.Parallel()
+
+	var c templig.Config[TestConfig]
+
+	if get := c.SecretRE(); get != nil {
+		t.Errorf("expected nil secret regex, got %v", get)
+	}
+}
+
+//nolint:paralleltest
+func TestDefaultSecretRENil(t *testing.T) {
+	oldRE := templig.SecretRE
+
+	templig.SecretRE = nil
+
+	if _, err := templig.FromFile[TestConfig]("testData/test_config_0.yaml"); err == nil {
+		t.Errorf("reading config with default secret regex nil should return an error")
+	}
+
+	templig.SecretRE = oldRE
+}

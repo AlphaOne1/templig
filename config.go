@@ -56,10 +56,6 @@ func (c *Config[T]) overlay(r io.Reader) error {
 		return aErr
 	}
 
-	if err := c.SetSecretRE(additionalConfig.secretRE); err != nil {
-		return err
-	}
-
 	if c.node == nil {
 		c.node = additionalConfig.Get()
 	} else {
