@@ -1,6 +1,14 @@
 <!-- SPDX-FileCopyrightText: 2025 The templig contributors.
      SPDX-License-Identifier: MPL-2.0
 -->
+
+Release 0.9.1
+=============
+
+- dependency updates
+- remove invalid secretRE update on config overlays
+- restored complete test coverage
+
 Release 0.9.0
 =============
 
