@@ -1,4 +1,4 @@
-# SPDX-FileCopyrightText: 2025 The templig contributors.
+# SPDX-FileCopyrightText: 2026 The templig contributors.
 # SPDX-License-Identifier: MPL-2.0
 
 name: Tests
@@ -99,10 +99,11 @@ jobs:
             run: go tool gotestsum --junitfile junit.xml -- -race -v `go list ./...` --covermode=atomic --coverpkg=./... --coverprofile=coverage.txt
 
           - name: Upload test results to Codecov
-            if: ${{ !cancelled() }}
-            uses: codecov/test-results-action@0fa95f0e1eeaafde2c782583b36b28ad0d8c77d3 # v1.2.1
+            if:   ${{ !cancelled() }}
+            uses: codecov/codecov-action@671740ac38dd9b0130fbe1cec585b89eea48d3de # v5.5.2
             with:
-                token: ${{ secrets.CODECOV_TOKEN }}
+                report_type: test_results
+                token:       ${{ secrets.CODECOV_TOKEN }}
 
           - name: Coverage
             run: go tool cover -func=coverage.txt
