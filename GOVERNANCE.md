@@ -1,5 +1,5 @@
 <!--  SPDX-FileCopyrightText: © 2004-2025 Greg Wilson
-      SPDX-FileCopyrightText: 2025 The templig contributors.
+      SPDX-FileCopyrightText: 2026 The templig contributors.
       SPDX-License-Identifier: CC-BY-4.0
 -->
 
