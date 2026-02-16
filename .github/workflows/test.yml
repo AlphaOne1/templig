@@ -99,11 +99,11 @@ jobs:
             run: go tool gotestsum --junitfile junit.xml -- -race -v `go list ./...` --covermode=atomic --coverpkg=./... --coverprofile=coverage.txt
 
           - name: Upload test results to Codecov
-            if:   ${{ !cancelled() }}
+            if: ${{ !cancelled() }}
             uses: codecov/codecov-action@671740ac38dd9b0130fbe1cec585b89eea48d3de # v5.5.2
             with:
                 report_type: test_results
-                token:       ${{ secrets.CODECOV_TOKEN }}
+                token: ${{ secrets.CODECOV_TOKEN }}
 
           - name: Coverage
             run: go tool cover -func=coverage.txt
