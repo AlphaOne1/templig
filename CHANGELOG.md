@@ -2,6 +2,11 @@
      SPDX-License-Identifier: MPL-2.0
 -->
 
+Release 0.9.2
+=============
+
+- added go fix for deprecated function `FromFiles`
+
 Release 0.9.1
 =============
 
