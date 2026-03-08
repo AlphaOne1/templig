@@ -18,7 +18,7 @@ import (
 type Config struct {
 	ID   int    `yaml:"id"`
 	Name string `yaml:"name"`
-	Pass string `yaml:"pass"` //nolint:gosec
+	Pass string `yaml:"pass"`
 }
 
 // main reads a configuration file. The configuration file then uses the env template function to read the password
