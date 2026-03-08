@@ -10,6 +10,7 @@ import (
 
 func TestMainGood(t *testing.T) {
 	os.Args = []string{"main", "--passEnv"}
+
 	t.Setenv("PASSWORD", "bogus")
 	main()
 }
@@ -18,5 +19,6 @@ func TestMainBad(t *testing.T) {
 	t.Parallel()
 
 	os.Args = []string{"main"}
+
 	main()
 }
