@@ -17,7 +17,7 @@ import (
 type Config struct {
 	ID   int    `yaml:"id"`
 	Name string `yaml:"name"`
-	Pass string `yaml:"pass"` //nolint:gosec
+	Pass string `yaml:"pass"`
 }
 
 // main reads a configuration file. That configuration file then uses the read templig function to read a file with
