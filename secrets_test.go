@@ -285,6 +285,7 @@ func TestHideSecrets(t *testing.T) {
 			if err := yaml.NewEncoder(&gotBuf).Encode(&node); err != nil {
 				t.Errorf("%v: Got error serializing got", testNum)
 			}
+
 			if err := yaml.NewEncoder(&wantBuf).Encode(test.want); err != nil {
 				t.Errorf("%v: Got error serializing want", testNum)
 			}

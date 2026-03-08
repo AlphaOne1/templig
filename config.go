@@ -205,6 +205,7 @@ func (c *Config[T]) ToSecretsHidden(w io.Writer) error {
 
 	if encodeErr == nil {
 		HideSecrets(&node, true, c.secretRE)
+
 		enc := yaml.NewEncoder(w)
 		writeErr = enc.Encode(node)
 		encCloseErr = enc.Close()
@@ -239,6 +240,7 @@ func (c *Config[T]) ToSecretsHiddenStructured(w io.Writer) error {
 
 	if encodeErr == nil {
 		HideSecrets(&node, false, c.secretRE)
+
 		enc := yaml.NewEncoder(w)
 		writeErr = enc.Encode(node)
 		encCloseErr = enc.Close()

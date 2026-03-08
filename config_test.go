@@ -313,6 +313,7 @@ func TestReadConfig(t *testing.T) {
 			if test.wantErr && fromErr == nil {
 				t.Errorf("%v: wanted error but got nil", testIndex)
 			}
+
 			if !test.wantErr && fromErr != nil {
 				t.Errorf("%v: did not want error but got %v", testIndex, fromErr)
 			}
@@ -321,23 +322,28 @@ func TestReadConfig(t *testing.T) {
 				if config.Get().ID != test.want.ID {
 					t.Errorf("%v: wanted ID %v but got %v", testIndex, test.want.ID, config.Get().ID)
 				}
+
 				if config.Get().Name != test.want.Name {
 					t.Errorf("%v: wanted Name %v but got %v", testIndex, test.want.Name, config.Get().Name)
 				}
+
 				if (config.Get().Conn != nil) != (test.want.Conn != nil) {
 					t.Errorf("%v: wanted Conn == nil -> %v but got %v", testIndex,
 						test.want.Conn != nil,
 						config.Get().Conn != nil)
 				}
+
 				if config.Get().Conn != nil && test.want.Conn != nil {
 					if config.Get().Conn.URL != test.want.Conn.URL {
 						t.Errorf("%v: wanted URL %v but got %v", testIndex, test.want.Conn.URL, config.Get().Conn.URL)
 					}
+
 					for _, p := range test.want.Conn.Passes {
 						if !slices.Contains(config.Get().Conn.Passes, p) {
 							t.Errorf("%v: wanted passes to containt %v but was not there", testIndex, p)
 						}
 					}
+
 					for _, p := range config.Get().Conn.Passes {
 						if !slices.Contains(test.want.Conn.Passes, p) {
 							t.Errorf("%v: found pass %v but should not there", testIndex, p)
@@ -563,6 +569,7 @@ func TestWriteFile(t *testing.T) {
 	if err != nil {
 		t.Errorf("writing to file should work")
 	}
+
 	defer func() { _ = os.Remove("testData/test_config_written.yaml") }()
 
 	bufOrig := bytes.Buffer{}
@@ -738,6 +745,7 @@ func TestReadConfigValidated(t *testing.T) {
 			if test.wantErr && fromErr == nil {
 				t.Errorf("%v: wanted error but got nil", testNum)
 			}
+
 			if !test.wantErr && fromErr != nil {
 				t.Errorf("%v: did not want error but got %v", testNum, fromErr)
 			}
@@ -746,6 +754,7 @@ func TestReadConfigValidated(t *testing.T) {
 				if config.Get().ID != test.want.ID {
 					t.Errorf("%v: wanted ID %v but got %v", testNum, test.want.ID, config.Get().ID)
 				}
+
 				if config.Get().Name != test.want.Name {
 					t.Errorf("%v: wanted Name %v but got %v", testNum, test.want.Name, config.Get().Name)
 				}

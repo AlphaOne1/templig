@@ -12,5 +12,6 @@ func TestMainGood(t *testing.T) {
 	t.Parallel()
 
 	os.Args = []string{"main"}
+
 	main()
 }

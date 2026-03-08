@@ -10,6 +10,7 @@ import (
 
 func TestMainGood( /* t */ *testing.T) {
 	os.Args = []string{"main", "--pass=bogus"}
+
 	main()
 }
 
@@ -17,5 +18,6 @@ func TestMainBad(t *testing.T) {
 	t.Parallel()
 
 	os.Args = []string{"main"}
+
 	main()
 }
