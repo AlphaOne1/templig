@@ -107,10 +107,10 @@ A maintainer can only merge a Pull Request into master if:
 
 In addition to these automatic checks, the following conditions have to be met:
 
-- Changelog: The changelog has the sections with the changes of the past
-  releases, these are immutable less for corrections. There is at least one 
-  section explicating the next release. All visible changes have to be included
-  in the changelog. Further security fixes have to be included here.
+- Changelog: The changelog contains sections with the changes of the past
+  releases. Those sections are immutable except for corrections. There is at
+  least one section explicating the next release. All visible changes have to be
+  included in the changelog. Further security fixes have to be included here.
 
 Any maintainer is allowed to merge a PR if all of these conditions have been
 met.

@@ -5,17 +5,17 @@
 Roadmap
 =======
 
-Although *templig* is considered production ready, there are some points that
+Although *templig* is considered production-ready, there are some points that
 could be improved upon:
 
 Upcoming
 --------
 
-* __Soon: Command Line Argument Support__
+* __Soon: Command-Line Argument Support__
 
-  Currently *templig* does not include dedicated support for command line
+  Currently *templig* does not include dedicated support for command-line
   arguments. It is the last missing piece to cover classical possible input
-  vectors. If we could provide command line argument read access to templates in
+  vectors. If we could provide command-line argument read access to templates in
   an easy-to-use way, it would further improve *templig*'s applicability.
 
 * __In Design: REST Calls__
@@ -36,7 +36,7 @@ Upcoming
     ([PostgreSQL](https://www.postgresql.org),
      [MariaDB](https://mariadb.org),
      [SQLite](https://sqlite.org), ...)
-  * other key-value stores ([Redis](https://redis.io), [Memcached](https://memcached.org)),...)
+  * other key-value stores ([Redis](https://redis.io), [Memcached](https://memcached.org),...)
 
   If we could also get information from these, that also would maximize the
   versatility of *templig*. As database drivers might themselves import a huge

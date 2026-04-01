@@ -118,13 +118,13 @@ $ go get github.com/AlphaOne1/templig
 Builds are secured with SLSA Level 3 provenance via slsa-framework/slsa-github-generator.
 The downloaded source archive together with the provenance file `multiple.intoto.jsonl`
 can be verified using the [slsa-verifier](https://github.com/slsa-framework/slsa-verifier/)
-(replace the version with the one you actually downloaded):
+(replace the `<VERSION>` with the one you actually downloaded):
 
 ```bash
-$ slsa-verifier verify-artifact templig-src-v0.9.2.tar.gz \
-    --provenance-path multiple.intoto.jsonl               \
-    --source-uri github.com/AlphaOne1/templig             \
-    --source-tag v0.9.2
+$ slsa-verifier verify-artifact templig-src-v<VERSION>.tar.gz \
+    --provenance-path multiple.intoto.jsonl                   \
+    --source-uri github.com/AlphaOne1/templig                 \
+    --source-tag v<VERSION>
 ```
 
 

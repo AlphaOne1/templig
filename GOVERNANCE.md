@@ -59,8 +59,9 @@ The BDFL may alternatively decide to move to a Steering Committee governance
 model, in which case this document must be replaced with a new description of
 roles and responsibilities.
 
+
 Project Continuity
-==================
+------------------
 
 To ensure the project's continuity, the following measures are taken:
 
