@@ -2,6 +2,12 @@
      SPDX-License-Identifier: MPL-2.0
 -->
 
+Release next
+============
+
+- added documentation for architecture and security assurance case
+- added roadmap
+
 Release 0.9.2
 =============
 
