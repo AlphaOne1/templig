@@ -1,3 +1,7 @@
+<!-- SPDX-FileCopyrightText: 2026 The templig contributors.
+     SPDX-License-Identifier: MPL-2.0
+-->
+
 Security Assurance Case
 =======================
 
