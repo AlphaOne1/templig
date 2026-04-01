@@ -14,41 +14,62 @@ The loading of a configuration is explicated in the following picture:
 ```mermaid
 graph TD
     subgraph Input_Layer [Input Layer]
-        ConfigTemplate[Templated Config File: .yaml]
-        EnvVars[Environment Variables]
-        RefFiles[Referenced Files]
+        ConfigFile[/Templated Config File: .yaml/]
+        ConfigTemplate[/Templated Config YAML/]
+        EnvVars[/Environment Variables/]
+        RefFiles[/Referenced Files/]
+        ConfigTypes[/Config Types/]
     end
         
     subgraph Core_Engine [templig Core]
-        Loader[Template Loader]
+        FileLoader[File Loader]
+        TemplateLoader[Template Loader]
         FuncMap[Additional Template Functions]
         Renderer[Go Template Engine]
         Parser[Config Parser]
+        HasValidator{Has Validator}
         Validator[Config Validator]
+
+        FileLoader     -- "Reader" --> TemplateLoader
+        Renderer       -- "YAML"   --> Parser
+        TemplateLoader             --> Renderer
+        FuncMap                    --> Renderer
+        Parser                     --> HasValidator
+        HasValidator   -- "yes"    --> Validator
     end
 
     subgraph Output_Layer [Output Layer]
-        Config[Parsed Structure]
+        Config[/Parsed Structure/]
+        WithSecretHiding{WithSecretHiding}
         SecretHiding[Secret Hiding]
-        Stdout[Textual Output]
+        Stdout[/Textual Output/]
+        
+        Config                             --> WithSecretHiding
+        WithSecretHiding -- "yes\n\nYAML"  --> SecretHiding
+        WithSecretHiding -- "no\n\nWriter" --> Stdout
+        SecretHiding     -- "Writer"       --> Stdout
     end
 
-    %% Data Flows
-    ConfigTemplate --> Loader
-    EnvVars --> Renderer
-    RefFiles --> Renderer
-    
-    Renderer --> Parser
-    Loader --> Renderer
-    FuncMap --> Renderer
-    Parser --> Validator
-    
-    Parser --> Config
-    Config --> SecretHiding
-    SecretHiding --> Stdout
+    %% Input --> Core
+    ConfigFile                 --> FileLoader
+    ConfigTemplate -- "Reader" --> TemplateLoader
+    EnvVars                    --> Renderer
+    RefFiles                   --> Renderer
+    ConfigTypes                --> Parser
+   
+    %% Core --> Output
+    HasValidator   --"no" --> Config
+    Validator             --> Config
 
-    style Core_Engine fill:#f9f,stroke:#333,stroke-width:2px
+    style Core_Engine  fill:#f9f,stroke:#333,stroke-width:2px
+    style Validator    stroke-dasharray: 5 5
+    style SecretHiding stroke-dasharray: 5 5
 ```
+
+*templig* utilizes Go generics to ensure type safety. The Config Types provided
+at the input layer act as a blueprint for the Config Parser. This ensures that
+the rendered output is not only syntactically correct but also semantically
+compliant with the user's expected data structure.
 
 The *templig* Core operates entirely in-memory and does not require network
 access. All inputs (templates, environment variables) are processed through the
