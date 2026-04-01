@@ -5,8 +5,10 @@
 Release next
 ============
 
-- added documentation for architecture and security assurance case
+- added documentation for architecture
+- added security assurance case
 - added roadmap
+- added documentation for SLSA provenance verification
 
 Release 0.9.2
 =============
