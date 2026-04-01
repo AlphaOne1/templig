@@ -23,8 +23,8 @@ Threat Model & Trust Boundaries
 * __Mitigation__:
 
   Data is never executed as code. It is processed by the Go text/template engine
-  (which is HTML-safe if used correctly) and subsequently strictly validated by
-  the Config Validator against a defined schema.
+  (for data templating, not HTML sanitization) and subsequently strictly
+  validated by the Config Validator against a defined schema.
 
 Secure Design Principles (Saltzer & Schroeder)
 ----------------------------------------------
@@ -85,10 +85,11 @@ Evidence of Assurance
 
 * __Test Coverage__:
 
-  100% statement coverage ensures that all error handling paths (fail-safes) are
-  verified.
+  High statement coverage is tracked in CI to increase confidence that
+  error-handling paths (fail-safes) are exercised.
 
 * __Build Integrity__:
 
-  SLSA Level 3 provenance ensures that the distributed binaries match the
-  audited source code.
+  SLSA Level 3 provenance provides build traceability and stronger assurance
+  that distributed artifacts were produced by the documented build process from
+  the declared source and inputs.
