@@ -70,9 +70,9 @@ use should be covered.
 
 ### Document your feature
 
-All the good intentions go to waste, if nobody can enjoy the fruits of this labor
-due to non-existent (or bad, or wrong) documentation. Please take care that you
-include:
+All the good intentions go to waste, if nobody can enjoy the fruits of this
+labor due to non-existent (or bad, or wrong) documentation. Please take care that
+you include:
 
 - a concise description of your new feature
 - generate new or update (in case) the existing examples
@@ -107,12 +107,13 @@ A maintainer can only merge a Pull Request into master if:
 
 In addition to these automatic checks, the following conditions have to be met:
 
-- Changelog: The changelog has the sections with the changes of the past releases, these
-  are immutable less for corrections. There is at least one section explicating the next
-  release. All visible changes have to be included in the changelog. Further security
-  fixes have to be included here.
+- Changelog: The changelog has the sections with the changes of the past
+  releases, these are immutable less for corrections. There is at least one 
+  section explicating the next release. All visible changes have to be included
+  in the changelog. Further security fixes have to be included here.
 
-Any maintainer is allowed to merge a PR if all of these conditions have been met.
+Any maintainer is allowed to merge a PR if all of these conditions have been
+met.
 
 
 Developer Certificate of Origin (DCO)
@@ -133,3 +134,10 @@ flag as follows:
 ```shell
 git config --global alias.ci 'commit -s'
 ```
+
+Trust & Compliance
+------------------
+
+*templig* is built with security in mind. For a detailed justification of its
+security design and threat model, please refer to the
+[Security Assurance Case](SECURITY_ASSURANCE.md).
