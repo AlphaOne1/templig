@@ -1,0 +1,9 @@
+coverage:
+    status:
+        project:
+            default:
+                target: 95%    # the minimal overall coverage
+                threshold: 1%  # allows for minimal deviation (optional)
+        patch:
+            default:
+                target: 95%    # only newly added code must fulfill 80%
