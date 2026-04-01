@@ -57,7 +57,13 @@
        rel="external noopener noreferrer"
        target="_blank">
         <img src="https://api.reuse.software/badge/github.com/AlphaOne1/templig"
-            alt="REUSE compliance">
+             alt="REUSE compliance">
+    </a>
+    <a href="https://slsa.dev"
+       rel="external noopener noreferrer"
+       target="_blank">
+        <img src="https://slsa.dev/images/gh-badge-level3.svg"
+             alt="SLSA Level 3">
     </a>
     <a href="https://app.fossa.com/projects/git%2Bgithub.com%2FAlphaOne1%2Ftemplig?ref=badge_shield&issueType=license"
        rel="external noopener noreferrer"
@@ -107,6 +113,18 @@ To install *templig*, you can use the following command:
 
 ```bash
 $ go get github.com/AlphaOne1/templig
+```
+
+Builds are secured with SLSA Level 3 provenance via slsa-framework/slsa-github-generator.
+The downloaded source archive together with the provenance file `multiple.intoto.jsonl`
+can be verified using the [slsa-verifier](https://github.com/slsa-framework/slsa-verifier/)
+(replace the version with the one you actually downloaded):
+
+```bash
+$ slsa-verifier verify-artifact templig-src-v0.9.2.tar.gz \
+    --provenance-path multiple.intoto.jsonl               \
+    --source-uri github.com/AlphaOne1/templig             \
+    --source-tag v0.9.2
 ```
 
 
