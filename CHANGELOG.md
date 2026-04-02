@@ -9,7 +9,7 @@ Release next
 - added security assurance case
 - added roadmap
 - added documentation for SLSA provenance verification
-- harden github actions against injections via {{...}}
+- harden GitHub actions against injections via {{...}}
 
 Release 0.9.2
 =============
@@ -44,7 +44,7 @@ Release 0.9.0
 Release 0.8.4
 =============
 
-- introduced governance model
+- introduced a governance model
 - enforce DCO
 - REUSE compliance
 - dependency updates
@@ -74,7 +74,7 @@ Release 0.8.0
 - add an example for config object generation from JSON schema
 - more documentation in examples
 - updated dependencies
-- add golangci-lint checks
+- add `golangci-lint` checks
 
 Release 0.7.0
 =============
@@ -84,15 +84,15 @@ Release 0.7.0
 Release 0.6.2
 =============
 
-- update x/crypto dependency 0.34.0 -> 0.35.0
+- update x/crypto dependency 0.34.0 → 0.35.0
 
 Release 0.6.1
 =============
 
 - fix not printing using secret hiding
 - documentation for configuration printing and secret hiding
-- extended templating/env example to print configuration hiding secrets
-- improve secret detection mechanism
+- extended templating/env example to print the configuration hiding its secrets
+- improve the secret detection mechanism
 
 Release 0.6.0
 =============
