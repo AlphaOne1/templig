@@ -59,6 +59,12 @@
         <img src="https://www.bestpractices.dev/projects/9789/badge"
              alt="OpenSSF Best Practices">
     </a>
+    <a href="https://www.bestpractices.dev/projects/9789"
+       rel="external noopener noreferrer"
+       target="_blank">
+        <img src="https://www.bestpractices.dev/projects/9789/baseline"
+             alt="OpenSSF Baseline">
+    </a>
     <a href="https://scorecard.dev/viewer/?uri=github.com/AlphaOne1/templig"
        rel="external noopener noreferrer"
        target="_blank">
