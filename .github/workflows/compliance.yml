@@ -57,12 +57,12 @@ jobs:
 
           - name: Determine pushed commits
             id: range
-            run: |
-                set -euo pipefail
-
+            env:
                 # Use GitHub-provided SHAs to build the range for this push
                 BEFORE="${{ github.event.before }}"
                 AFTER="${{ github.sha }}"
+            run: |
+                set -euo pipefail
 
                 if [ "$BEFORE" = "0000000000000000000000000000000000000000" ]
                 then
@@ -73,6 +73,9 @@ jobs:
                 fi
 
           - name: Check for Signed-off-by
+            env:
+                GH_ACTOR: ${{ github.actor }}
+                GH_PUSHER: ${{ github.event.pusher.name }}
             run: |
                 set -euo pipefail
                 missing=""
@@ -101,8 +104,8 @@ jobs:
 
                         echo "Committer name:           $committer_name"
                         echo "Committer email:          $committer_email"
-                        echo "github.actor:             ${{ github.actor }}"
-                        echo "github.event.pusher.name: ${{ github.event.pusher.name }}"
+                        echo "github.actor:             $GH_ACTOR"
+                        echo "github.event.pusher.name: $GH_PUSHER"
                     fi
                 done < shas.txt
 
@@ -145,6 +148,9 @@ jobs:
                 | jq -r '.[].sha' > shas.txt
 
           - name: Check for Signed-off-by
+            env:
+                GH_ACTOR: ${{ github.actor }}
+                GH_PUSHER: ${{ github.event.pusher.name }}
             run: |
                 set -euo pipefail
                 missing=""
@@ -173,8 +179,8 @@ jobs:
 
                         echo "Committer name:           $committer_name"
                         echo "Committer email:          $committer_email"
-                        echo "github.actor:             ${{ github.actor }}"
-                        echo "github.event.pusher.name: ${{ github.event.pusher.name }}"
+                        echo "github.actor:             $GH_ACTOR"
+                        echo "github.event.pusher.name: $GH_PUSHER"
                     fi
                 done < shas.txt
 

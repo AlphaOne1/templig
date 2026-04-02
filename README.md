@@ -5,6 +5,18 @@
 <!-- markdownlint-disable MD013 MD033 MD041 -->
 <p align="center">
     <img src="templig_logo.svg" width="25%" alt="Logo"><br>
+    <a href="https://github.com/AlphaOne1/templig/blob/main/go.mod"
+       rel="external noopener noreferrer"
+       target="_blank">
+        <img src="https://img.shields.io/github/go-mod/go-version/AlphaOne1/templig"
+             alt="Go Version">
+    </a>
+    <a href="https://github.com/AlphaOne1/templig/releases"
+       rel="external noopener noreferrer"
+       target="_blank">
+        <img src="https://img.shields.io/github/v/release/AlphaOne1/templig"
+             alt="Latest Release">
+    </a>
     <a href="https://github.com/AlphaOne1/templig/actions/workflows/test.yml"
        rel="external noopener noreferrer"
        target="_blank">
