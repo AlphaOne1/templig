@@ -33,23 +33,26 @@ jobs:
 
           - name: Generate source archive
             shell: bash
+            env:
+                TAG_NAME: ${{ github.event.release.tag_name }}
             run: |
                 set -euo pipefail
 
-                TAG=`echo "${{ github.event.release.tag_name }}" | sed 's/\//-/g'`
+                TAG=`echo "$TAG_NAME" | sed 's/\//-/g'`
                 git archive \
                   --format=tar.gz \
                   --prefix="templig-src-${TAG}/" \
                   --output="templig-src-${TAG}.tar.gz" \
-                  "${{ github.event.release.tag_name }}"
+                  "$TAG_NAME"
 
           - name: Upload Release (via GitHub CLI)
             env:
                 GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+                TAG_NAME: ${{ github.event.release.tag_name }}
             shell: bash
             run: |
                 set -euo pipefail
-                gh release upload "${{ github.event.release.tag_name }}" templig-src-*.tar.gz --clobber
+                gh release upload "$TAG_NAME" templig-src-*.tar.gz --clobber
 
     ChecksumReleaseAssets:
         needs: Build
@@ -71,13 +74,14 @@ jobs:
           - name: Download all release assets via GitHub CLI
             env:
                 GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+                TAG_NAME: ${{ github.event.release.tag_name }}
             run: |
                 set -euo pipefail
 
                 mkdir -p release-assets
                 cd release-assets
                 # gets all assets of the release
-                gh release download "${{ github.event.release.tag_name }}" --clobber
+                gh release download "$TAG_NAME" --clobber
                 echo "Downloaded assets:"
                 ls -lah
 
