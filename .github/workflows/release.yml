@@ -40,10 +40,10 @@ jobs:
 
                 TAG=`echo "$TAG_NAME" | sed 's/\//-/g'`
                 git archive \
-                  --format=tar.gz \
-                  --prefix="templig-src-${TAG}/" \
-                  --output="templig-src-${TAG}.tar.gz" \
-                  "$TAG_NAME"
+                    --format=tar.gz \
+                    --prefix="templig-src-${TAG}/" \
+                    --output="templig-src-${TAG}.tar.gz" \
+                    "$TAG_NAME"
 
           - name: Upload Release (via GitHub CLI)
             env:
