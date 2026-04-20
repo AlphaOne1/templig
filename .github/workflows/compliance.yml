@@ -4,12 +4,12 @@
 name: Compliance Checks
 
 on:
-  push:
-      branches:
-        - master
-  pull_request:
-      branches:
-        - master
+    push:
+        branches:
+          - master
+    pull_request:
+        branches:
+          - master
 
 concurrency:
     group: ${{ github.workflow }}-${{ github.ref }}
@@ -127,25 +127,25 @@ jobs:
           - name: Harden Runner
             uses: step-security/harden-runner@f808768d1510423e83855289c910610ca9b43176 # v2.17.0
             with:
-              egress-policy: audit
+                egress-policy: audit
 
           - name: Checkout
             uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
             with:
-              fetch-depth: 0
+                fetch-depth: 0
 
           - name: Get PR commits
             env:
-              GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+                GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
             run: |
-              set -euo pipefail
-              gh --version
-              jq --version
+                set -euo pipefail
+                gh --version
+                jq --version
 
-              # Fetch all commits of the PR with pagination and extract SHAs
-              gh api -H "Accept: application/vnd.github+json" --paginate \
-                  repos/${{ github.repository }}/pulls/${{ github.event.pull_request.number }}/commits \
-                  | jq -r '.[].sha' > shas.txt
+                # Fetch all commits of the PR with pagination and extract SHAs
+                gh api -H "Accept: application/vnd.github+json" --paginate \
+                    repos/${{ github.repository }}/pulls/${{ github.event.pull_request.number }}/commits \
+                    | jq -r '.[].sha' > shas.txt
 
           - name: Check for Signed-off-by
             env:
