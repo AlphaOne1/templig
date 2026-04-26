@@ -10,6 +10,7 @@ Release next
 - added roadmap
 - added documentation for SLSA provenance verification
 - harden GitHub actions against injections via {{...}}
+- dependency updates
 
 Release 0.9.2
 =============

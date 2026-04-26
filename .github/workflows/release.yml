@@ -38,11 +38,12 @@ jobs:
             run: |
                 set -euo pipefail
 
+                PROJECT_NAME=`go list -m | sed -r 's/(.*\/)*(.+)/\2/'`
                 TAG=`echo "$TAG_NAME" | sed 's/\//-/g'`
                 git archive \
                     --format=tar.gz \
-                    --prefix="templig-src-${TAG}/" \
-                    --output="templig-src-${TAG}.tar.gz" \
+                    --prefix="${PROJECT_NAME}-src-${TAG}/" \
+                    --output="${PROJECT_NAME}-src-${TAG}.tar.gz" \
                     "$TAG_NAME"
 
           - name: Upload Release (via GitHub CLI)
@@ -52,7 +53,9 @@ jobs:
             shell: bash
             run: |
                 set -euo pipefail
-                gh release upload "$TAG_NAME" templig-src-*.tar.gz --clobber
+                
+                PROJECT_NAME=`go list -m | sed -r 's/(.*\/)*(.+)/\2/'`
+                gh release upload "$TAG_NAME" ${PROJECT_NAME}-src-*.tar.gz --clobber
 
     ChecksumReleaseAssets:
         needs: Build
