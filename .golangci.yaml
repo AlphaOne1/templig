@@ -15,6 +15,7 @@ linters:
 
     disable:
         - exhaustruct
+        - gomodguard
         - noinlineerr
         - nonamedreturns
         - wsl
@@ -30,6 +31,7 @@ linters:
                   - err113
                   - funlen
                   - gocognit
+                  - goconst
                   - maintidx
                   - nestif
 
