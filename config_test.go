@@ -27,6 +27,7 @@ type TestConfig struct {
 	Conn *TestConn `yaml:"conn,omitempty"`
 }
 
+//nolint:gocycle
 func TestReadConfig(t *testing.T) {
 	tests := []struct {
 		in      string
@@ -310,6 +311,14 @@ func TestReadConfig(t *testing.T) {
 				t.Errorf("%v: neither input data nor input file given", testIndex)
 			}
 
+			if !test.wantErr && config.SecretRE() == nil {
+				t.Errorf("%v: wanted SecretRE to be initialized", testIndex)
+			}
+
+			if test.wantErr && config != nil {
+				t.Errorf("%v: wanted error but got also non-nil config", testIndex)
+			}
+
 			if test.wantErr && fromErr == nil {
 				t.Errorf("%v: wanted error but got nil", testIndex)
 			}
@@ -391,6 +400,10 @@ func TestReadOverlayConfig(t *testing.T) {
 		t.Errorf("no error expected reading multiple files: %v", configErr)
 	}
 
+	if config.SecretRE() == nil {
+		t.Errorf("wanted SecretRE to be initialized")
+	}
+
 	if len(config.Get().Conn.Passes) != 3 {
 		t.Errorf("expected the passes to contain 3 entries")
 	}
@@ -410,6 +423,10 @@ func TestReadOverlayConfigReader(t *testing.T) {
 
 	if configErr != nil {
 		t.Errorf("no error expected reading multiple files: %v", configErr)
+	}
+
+	if config.SecretRE() == nil {
+		t.Errorf("wanted SecretRE to be initialized")
 	}
 
 	if len(config.Get().Conn.Passes) != 3 {
@@ -751,6 +768,10 @@ func TestReadConfigValidated(t *testing.T) {
 			}
 
 			if config != nil {
+				if config.SecretRE() == nil {
+					t.Errorf("wanted SecretRE to be initialized")
+				}
+
 				if config.Get().ID != test.want.ID {
 					t.Errorf("%v: wanted ID %v but got %v", testNum, test.want.ID, config.Get().ID)
 				}

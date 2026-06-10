@@ -41,6 +41,17 @@ type Config[T any] struct {
 	secretRE *regexp.Regexp
 }
 
+// newConfig initializes a new Config object.
+func newConfig[T any]() (*Config[T], error) {
+	c := new(Config[T])
+
+	if err := c.SetSecretRE(SecretRE); err != nil {
+		return nil, err
+	}
+
+	return c, nil
+}
+
 // Get gives a pointer to the deserialized configuration. Get does not load the configuration anew and
 // is principally inexpensive to call.
 func (c *Config[T]) Get() *T {
@@ -86,11 +97,12 @@ func (c *Config[T]) overlayFile(path string) error {
 
 // fromSingle reads a configuration from the single given io.Reader and
 // runs - if necessary - the contained template functions.
+// It does not retain a node structure that is needed as base for merges with other configurations.
 func fromSingle[T any](r io.Reader) (*Config[T], error) {
-	var config Config[T]
+	config, createErr := newConfig[T]()
 
-	if err := config.SetSecretRE(SecretRE); err != nil {
-		return nil, err
+	if createErr != nil {
+		return nil, createErr
 	}
 
 	fileContent, err := io.ReadAll(r)
@@ -118,7 +130,7 @@ func fromSingle[T any](r io.Reader) (*Config[T], error) {
 		return nil, fmt.Errorf("could not parse configuration: %w", decodeErr)
 	}
 
-	return &config, nil
+	return config, nil
 }
 
 // Validate checks if the configuration is valid if the content fulfills the Validator interface.
@@ -139,6 +151,7 @@ func From[T any](readers ...io.Reader) (*Config[T], error) {
 	}
 
 	var config *Config[T]
+	var createErr error
 	var decodeErr error
 	var validateErr error
 
@@ -147,7 +160,11 @@ func From[T any](readers ...io.Reader) (*Config[T], error) {
 		// go over the yaml.Node structure first.
 		config, decodeErr = fromSingle[T](readers[0])
 	} else {
-		config = new(Config[T])
+		config, createErr = newConfig[T]()
+
+		if createErr != nil {
+			return nil, createErr
+		}
 
 		for _, v := range readers {
 			if err := config.overlay(v); err != nil {
@@ -256,7 +273,8 @@ func FromFile[T any](paths ...string) (*Config[T], error) {
 		return nil, ErrNoConfigPaths
 	}
 
-	config := new(Config[T])
+	var config *Config[T]
+	var createErr error
 	var decodeErr error
 	var validateErr error
 
@@ -273,6 +291,12 @@ func FromFile[T any](paths ...string) (*Config[T], error) {
 
 		config, decodeErr = fromSingle[T](f)
 	} else {
+		config, createErr = newConfig[T]()
+
+		if createErr != nil {
+			return nil, createErr
+		}
+
 		for _, addOn := range paths {
 			aErr := config.overlayFile(addOn)
 

@@ -2,9 +2,11 @@
      SPDX-License-Identifier: MPL-2.0
 -->
 
-Release next
-============
+Release 0.9.3
+=============
 
+- added a common initialization function for the Config type
+- added Test that Config-local regexp object is initialized
 - added documentation for architecture
 - added security assurance case
 - added roadmap
