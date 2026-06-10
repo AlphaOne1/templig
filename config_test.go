@@ -857,7 +857,6 @@ func TestDefaultSecretRENilOverlayFile(t *testing.T) {
 	if _, err := templig.FromFile[TestConfig](
 		"testData/test_config_0.yaml",
 		"testData/test_config_0_overlay.yaml"); err == nil {
-
 		t.Errorf("reading config with default secret regex nil should return an error")
 	}
 
