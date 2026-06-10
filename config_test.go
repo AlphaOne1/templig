@@ -27,7 +27,7 @@ type TestConfig struct {
 	Conn *TestConn `yaml:"conn,omitempty"`
 }
 
-//nolint:gocycle
+//nolint:gocyclo
 func TestReadConfig(t *testing.T) {
 	tests := []struct {
 		in      string
