@@ -835,13 +835,45 @@ func TestReadSecretRENil(t *testing.T) {
 	}
 }
 
-//nolint:paralleltest
+//nolint:paralleltest // this test cannot be run in parallel, it modifies global state
 func TestDefaultSecretRENil(t *testing.T) {
 	oldRE := templig.SecretRE
 
 	templig.SecretRE = nil
 
 	if _, err := templig.FromFile[TestConfig]("testData/test_config_0.yaml"); err == nil {
+		t.Errorf("reading config with default secret regex nil should return an error")
+	}
+
+	templig.SecretRE = oldRE
+}
+
+//nolint:paralleltest // this test cannot be run in parallel, it modifies global state
+func TestDefaultSecretRENilOverlayFile(t *testing.T) {
+	oldRE := templig.SecretRE
+
+	templig.SecretRE = nil
+
+	if _, err := templig.FromFile[TestConfig](
+		"testData/test_config_0.yaml",
+		"testData/test_config_0_overlay.yaml"); err == nil {
+
+		t.Errorf("reading config with default secret regex nil should return an error")
+	}
+
+	templig.SecretRE = oldRE
+}
+
+//nolint:paralleltest // this test cannot be run in parallel, it modifies global state
+func TestDefaultSecretRENilOverlayReader(t *testing.T) {
+	oldRE := templig.SecretRE
+
+	templig.SecretRE = nil
+
+	f0, _ := os.Open("testData/test_config_0.yaml")
+	f1, _ := os.Open("testData/test_config_0_overlay.yaml")
+
+	if _, err := templig.From[TestConfig](f0, f1); err == nil {
 		t.Errorf("reading config with default secret regex nil should return an error")
 	}
 
