@@ -11,8 +11,9 @@ import (
 	"go.yaml.in/yaml/v4"
 )
 
-// SecretDefaultRE is the default regular expression used to identify secret values automatically.
-const SecretDefaultRE = "(?i)key|secret|pass(?:word)?|cert(?:ificate)?"
+// SecretDefaultRE is the default regular expression used to identify secret values automatically. It is deliberately
+// broad matching, as we perfer false positive over false negative matching.
+const SecretDefaultRE = "(?i)key|secret|pass(?:word)?|cert(?:ificate)?|token"
 
 // SecretRE is the regular expression used to identify secret values automatically.
 // In case there are different properties to identify secrets, extend it. Access to this variable
