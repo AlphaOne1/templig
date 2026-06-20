@@ -2,8 +2,8 @@
      SPDX-License-Identifier: MPL-2.0
 -->
 
-Release Next
-============
+Release 0.9.4
+=============
 
 - added `token` to secret detection
 - update dependencies
