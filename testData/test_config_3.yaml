@@ -1,0 +1,9 @@
+# SPDX-FileCopyrightText: 2026 The templig contributors.
+# SPDX-License-Identifier: MPL-2.0
+
+id: 9
+name: Name1
+conn:
+    url: https://www.tests.to
+    passes:
+      - {{ .Values.secret | required "secret.txt must be readable" | quote }}

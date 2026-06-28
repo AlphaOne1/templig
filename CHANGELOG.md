@@ -2,6 +2,14 @@
      SPDX-License-Identifier: MPL-2.0
 -->
 
+Release 0.10.0
+==============
+
+- added functional options for construction
+- added `WithValue` option that generates values accessible
+  via `.Value.valName` inside of configuration templates
+- update dependencies
+
 Release 0.9.4
 =============
 
