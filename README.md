@@ -344,7 +344,7 @@ Having a templated configuration file like this one:
 ```yaml
 id:   23
 name: Interesting Name
-pass: {{ .Value.pass | required "password value required" | quote }}
+pass: {{ .Values.pass | required "password value required" | quote }}
 ```
 
 One can see the templating code between the double curly braces `{{` and `}}`.
