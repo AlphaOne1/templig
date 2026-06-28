@@ -8,12 +8,16 @@ import (
 	"testing"
 )
 
-func TestEmptySource(t *testing.T) {
+func TestEmptySource0(t *testing.T) {
 	t.Parallel()
 
 	s := source{}
 
-	if _, _, err := s.Reader(); !errors.Is(err, ErrNoConfigPaths) || !errors.Is(err, ErrNoConfigReaders) {
+	_, cleanup, err := s.Reader()
+
+	cleanup()
+
+	if !errors.Is(err, ErrNoConfigPaths) || !errors.Is(err, ErrNoConfigReaders) {
 		t.Errorf("reading from empty source should have returned an error")
 	}
 }

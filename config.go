@@ -54,7 +54,9 @@ func (s source) Reader() (io.Reader, func(), error) {
 		return r, func() { _ = r.Close() }, nil
 	}
 
-	return nil, func() {}, errors.Join(ErrNoConfigPaths, ErrNoConfigReaders)
+	return nil, func() {
+		// empty body, for security
+	}, errors.Join(ErrNoConfigPaths, ErrNoConfigReaders)
 }
 
 // Config is the generic structure holding the configuration information for the specified type.
