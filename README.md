@@ -330,6 +330,62 @@ func main() {
 }
 ```
 
+#### Using Custom Values
+
+So far, the cases involved the convenience wrappers provided by *templig*. Beneath that layer there is a standard
+functional options pattern to generate a *templig* configuration. All options start with the `With` preix.
+
+So far, it was not possible for a programmer to provide own values to the configuration other than defining custom
+environment variables. To address this shortcoming, custom values are introduced, that allow the configuration to
+get that information via the `.Values` variable.
+
+Having a templated configuration file like this one:
+
+```yaml
+id:   23
+name: Interesting Name
+pass: {{ .Value.pass | required "password value required" | quote }}
+```
+
+One can see the templating code between the double curly braces `{{` and `}}`.
+The following program is essentially the same as in the [Simple Case](#simple-case).
+It just adds the `pass` field to the configuration:
+
+```go
+package main
+
+import (
+	"fmt"
+	"strings"
+
+	"github.com/AlphaOne1/templig"
+)
+
+// Config is the configuration structure
+type Config struct {
+	ID   int    `yaml:"id"`
+	Name string `yaml:"name"`
+	Pass string `yaml:"pass"`
+}
+
+// main will read and display the configuration
+func main() {
+	c, confErr := templig.New[Config](
+		templig.WithFile[Config]("my_config.yaml"),
+		templig.WithValue[Config]("pass", "secret"))
+  
+	fmt.Printf("read errors: %v", confErr)
+
+	if confErr == nil {
+		fmt.Printf("ID:   %v\n", c.Get().ID)
+		fmt.Printf("Name: %v\n", c.Get().Name)
+		fmt.Printf("Pass: %v\n", strings.Repeat("*", len(c.Get().Pass)))
+	}
+}
+```
+
+It should be noted, that using the `New` method with the functional options provides also the means to intermix file
+and io.Reader inputs freely.
 
 ### Validation
 
@@ -461,9 +517,9 @@ An example usage can be found [here](examples/templating/env).
 
 The regular expression used to identify secrets to hide can be changed globally setting `templig.SecretRE` to a
 different value. It also can be set for each `Config` instance using the `SetSecretRE` method. To hide, e.g., also
-tokens, one could use the following (with `SecretDefaultRE` containing the original regular expression text):
+identifications, one could use the following (with `SecretDefaultRE` containing the original regular expression text):
 
 ```go
 c, _ := templig.FromFile[Config]("my_config.yaml")
-c.SetSecretRE(regexp.MustCompile(templig.SecretDefaultRE + "|token"))
+c.SetSecretRE(regexp.MustCompile(templig.SecretDefaultRE + "|identification"))
 ```

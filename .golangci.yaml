@@ -89,6 +89,8 @@ linters:
 
         varnamelen:
             max-distance: 10
+            ignore-decls:
+                - c *Config[T]
 
         whitespace:
             multi-if: true

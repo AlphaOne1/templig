@@ -34,6 +34,7 @@ func TestReadConfig(t *testing.T) {
 		inFile  string
 		env     map[string]string
 		args    []string
+		values  map[string]any
 		want    TestConfig
 		wantErr bool
 	}{
@@ -277,6 +278,23 @@ func TestReadConfig(t *testing.T) {
 			args:    []string{"--param00"},
 			wantErr: false,
 		},
+		{ // 20
+			inFile: "testData/test_config_3.yaml",
+			values: map[string]any{
+				"secret": "pass0",
+			},
+			want: TestConfig{
+				ID:   9,
+				Name: "Name1",
+				Conn: &TestConn{
+					URL: "https://www.tests.to",
+					Passes: []string{
+						"pass0",
+					},
+				},
+			},
+			wantErr: false,
+		},
 	}
 
 	for testIndex, test := range tests {
@@ -299,17 +317,25 @@ func TestReadConfig(t *testing.T) {
 				os.Args = append(os.Args, test.args...)
 			}
 
+			options := []templig.Option[TestConfig]{}
+
+			for k, v := range test.values {
+				options = append(options, templig.WithValue[TestConfig](k, v))
+			}
+
 			var config *templig.Config[TestConfig]
 			var fromErr error
 
 			switch {
 			case len(test.in) > 0:
-				config, fromErr = templig.From[TestConfig](&testBuf)
+				options = append(options, templig.WithReader[TestConfig](&testBuf))
 			case len(test.inFile) > 0:
-				config, fromErr = templig.FromFile[TestConfig](test.inFile)
+				options = append(options, templig.WithFile[TestConfig](test.inFile))
 			default:
 				t.Errorf("%v: neither input data nor input file given", testIndex)
 			}
+
+			config, fromErr = templig.New[TestConfig](options...)
 
 			if !test.wantErr && config.SecretRE() == nil {
 				t.Errorf("%v: wanted SecretRE to be initialized", testIndex)
@@ -391,10 +417,10 @@ func TestNoReaders(t *testing.T) {
 func TestReadOverlayConfig(t *testing.T) {
 	t.Parallel()
 
-	config, configErr := templig.FromFile[TestConfig](
-		"testData/test_config_0.yaml",
-		"testData/test_config_0_overlay.yaml",
-	)
+	config, configErr := templig.New[TestConfig](
+		templig.WithValue[TestConfig]("does", "nothing"),
+		templig.WithFile[TestConfig]("testData/test_config_0.yaml"),
+		templig.WithFile[TestConfig]("testData/test_config_0_overlay.yaml"))
 
 	if configErr != nil {
 		t.Errorf("no error expected reading multiple files: %v", configErr)
@@ -561,6 +587,18 @@ func TestNoFilesDeprecated(t *testing.T) {
 
 	if c != nil {
 		t.Errorf("reading from broken reader should have returned nil")
+	}
+}
+
+func TestNoSources(t *testing.T) {
+	t.Parallel()
+
+	_, err := templig.New[TestConfig]()
+
+	if !errors.Is(err, templig.ErrNoConfigPaths) ||
+		!errors.Is(err, templig.ErrNoConfigReaders) {
+
+		t.Errorf("reading from broken reader should have returned an error")
 	}
 }
 
@@ -818,9 +856,11 @@ func TestSetSecretRE(t *testing.T) {
 func TestSetSecretRENil(t *testing.T) {
 	t.Parallel()
 
-	c, _ := templig.FromFile[TestConfig]("testData/test_config_0.yaml")
+	_, err := templig.New[TestConfig](
+		templig.WithFile[TestConfig]("testData/test_config_0.yaml"),
+		templig.WithSecretRE[TestConfig](nil))
 
-	if err := c.SetSecretRE(nil); err == nil {
+	if err == nil {
 		t.Errorf("setting secret regex to nil should return an error")
 	}
 }

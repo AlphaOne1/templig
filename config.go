@@ -34,18 +34,123 @@ type Validator interface {
 	Validate() error
 }
 
+type source struct {
+	fileName string
+	reader   io.Reader
+}
+
+func (s source) Reader() (io.Reader, func(), error) {
+	if s.reader != nil {
+		return s.reader, func() {}, nil
+	}
+
+	if s.fileName != "" {
+		r, err := os.Open(s.fileName)
+
+		if err != nil {
+			return nil, func() {}, fmt.Errorf("could not open config file: %w", err)
+		}
+
+		return r, func() { _ = r.Close() }, nil
+	}
+
+	return nil, func() {}, errors.Join(ErrNoConfigPaths, ErrNoConfigReaders)
+}
+
 // Config is the generic structure holding the configuration information for the specified type.
 type Config[T any] struct {
 	node     *yaml.Node
 	content  T
 	secretRE *regexp.Regexp
+	sources  []source
+	values   map[string]any
 }
 
-// newConfig initializes a new Config object.
-func newConfig[T any]() (*Config[T], error) {
+// Option defines a functional option for configuring a Config instance.
+// It applies modifications or settings to the Config.
+type Option[T any] func(*Config[T]) error
+
+// WithSecretRE returns an Option to set the regular expression used for hiding secrets in the configuration.
+func WithSecretRE[T any](re *regexp.Regexp) Option[T] {
+	return func(c *Config[T]) error {
+		return c.SetSecretRE(re)
+	}
+}
+
+// WithFile creates an Option to specify file paths as configuration sources for the Config instance.
+func WithFile[T any](fileNames ...string) Option[T] {
+	return func(c *Config[T]) error {
+		if len(fileNames) == 0 {
+			return ErrNoConfigPaths
+		}
+
+		sources := make([]source, len(c.sources)+len(fileNames))
+
+		copy(sources, c.sources)
+
+		for i, j := len(c.sources), 0; j < len(fileNames); i, j = i+1, j+1 {
+			sources[i] = source{fileName: fileNames[j]}
+		}
+
+		c.sources = sources
+
+		return nil
+	}
+}
+
+// WithReader creates an Option that adds the provided io.Reader instances as configuration sources.
+func WithReader[T any](readers ...io.Reader) Option[T] {
+	return func(c *Config[T]) error {
+		if len(readers) == 0 {
+			return ErrNoConfigReaders
+		}
+
+		sources := make([]source, len(c.sources)+len(readers))
+
+		copy(sources, c.sources)
+
+		for i, j := len(c.sources), 0; j < len(readers); i, j = i+1, j+1 {
+			sources[i] = source{reader: readers[j]}
+		}
+
+		c.sources = sources
+
+		return nil
+	}
+}
+
+// WithValue creates an Option that sets a key-value pair in the configuration's values map.
+func WithValue[T any](k string, v any) Option[T] {
+	return func(c *Config[T]) error {
+		c.values[k] = v
+
+		return nil
+	}
+}
+
+// New creates a new Config instance of type T using the provided options and
+// returns it along with any errors encountered.
+func New[T any](opts ...Option[T]) (*Config[T], error) {
 	c := new(Config[T])
+	c.values = make(map[string]any)
 
 	if err := c.SetSecretRE(SecretRE); err != nil {
+		return nil, err
+	}
+
+	var errs []error
+
+	for _, opt := range opts {
+		if err := opt(c); err != nil {
+			errs = append(errs, err)
+		}
+	}
+
+	if len(errs) > 0 {
+		return nil, errors.Join(errs...)
+	}
+
+	if err := c.readSources(); err != nil {
 		return nil, err
 	}
 
@@ -58,10 +163,107 @@ func (c *Config[T]) Get() *T {
 	return &c.content
 }
 
+// readSources processes all configuration sources, deserializes their content, and
+// validates the resulting configuration.
+func (c *Config[T]) readSources() error {
+	if len(c.sources) == 0 {
+		return errors.Join(ErrNoConfigPaths, ErrNoConfigReaders)
+	}
+
+	var decodeErr error
+	var validateErr error
+
+	if len(c.sources) == 1 {
+		// to optimize the most common case of a single reader, we do not need to
+		// go over the yaml.Node structure first.
+		decodeErr = func() error {
+			r, cleanup, err := c.sources[0].Reader()
+
+			defer cleanup()
+
+			if err != nil {
+				return err
+			}
+
+			return c.fromSingle(r)
+		}()
+	} else {
+		for _, v := range c.sources {
+			if err := func() error {
+				r, cleanup, err := v.Reader()
+
+				defer cleanup()
+
+				if err != nil {
+					return err
+				}
+
+				return c.overlay(r)
+			}(); err != nil {
+				return err
+			}
+		}
+
+		decodeErr = c.node.Decode(&c.content)
+
+		// cleanup
+		c.node = nil
+	}
+
+	if decodeErr == nil {
+		validateErr = c.Validate()
+	}
+
+	if resultErr := errors.Join(decodeErr, validateErr); resultErr != nil {
+		return resultErr
+	}
+
+	return nil
+}
+
+// fromSingle reads a configuration from the single given io.Reader and
+// runs - if necessary - the contained template functions.
+// It does not retain a node structure needed as a base for merges with other configurations.
+func (c *Config[T]) fromSingle(r io.Reader) error {
+	fileContent, err := io.ReadAll(r)
+
+	if err != nil {
+		return fmt.Errorf("could not read from reader: %w", err)
+	}
+
+	var tmpl *template.Template
+
+	if tmpl, err = template.
+		New("config").
+		Funcs(templigFunctions()).
+		Parse(string(fileContent)); err != nil {
+		return fmt.Errorf("could not parse template: %w", err)
+	}
+
+	var b bytes.Buffer
+
+	if err = tmpl.Execute(&b, map[string]any{"Values": c.values}); err != nil {
+		return fmt.Errorf("could not execute template: %w", err)
+	}
+
+	if decodeErr := yaml.NewDecoder(&b).Decode(&c.content); decodeErr != nil {
+		return fmt.Errorf("could not parse configuration: %w", decodeErr)
+	}
+
+	return nil
+}
+
 // overlay is called repeatedly and overlays the current intermediate configuration
 // with the content of the given io.Reader.
 func (c *Config[T]) overlay(r io.Reader) error {
-	additionalConfig, aErr := fromSingle[yaml.Node](r)
+	opts := make([]Option[yaml.Node], 0, len(c.values)+1)
+	opts = append(opts, WithReader[yaml.Node](r))
+
+	for k, v := range c.values {
+		opts = append(opts, WithValue[yaml.Node](k, v))
+	}
+
+	additionalConfig, aErr := New[yaml.Node](opts...)
 
 	if aErr != nil {
 		return aErr
@@ -82,57 +284,6 @@ func (c *Config[T]) overlay(r io.Reader) error {
 	return nil
 }
 
-// overlayFile opens a given configuration file and loads it as an intermediate using the overlay function.
-func (c *Config[T]) overlayFile(path string) error {
-	f, err := os.Open(filepath.Clean(path))
-
-	if err != nil {
-		return fmt.Errorf("could not open overlay file %v: %w", path, err)
-	}
-
-	defer func() { _ = f.Close() }()
-
-	return c.overlay(f)
-}
-
-// fromSingle reads a configuration from the single given io.Reader and
-// runs - if necessary - the contained template functions.
-// It does not retain a node structure that is needed as base for merges with other configurations.
-func fromSingle[T any](r io.Reader) (*Config[T], error) {
-	config, createErr := newConfig[T]()
-
-	if createErr != nil {
-		return nil, createErr
-	}
-
-	fileContent, err := io.ReadAll(r)
-
-	if err != nil {
-		return nil, fmt.Errorf("could not read from reader: %w", err)
-	}
-
-	var tmpl *template.Template
-
-	if tmpl, err = template.
-		New("config").
-		Funcs(templigFunctions()).
-		Parse(string(fileContent)); err != nil {
-		return nil, fmt.Errorf("could not parse template: %w", err)
-	}
-
-	var b bytes.Buffer
-
-	if err = tmpl.Execute(&b, nil); err != nil {
-		return nil, fmt.Errorf("could not execute template: %w", err)
-	}
-
-	if decodeErr := yaml.NewDecoder(&b).Decode(&config.content); decodeErr != nil {
-		return nil, fmt.Errorf("could not parse configuration: %w", decodeErr)
-	}
-
-	return config, nil
-}
-
 // Validate checks if the configuration is valid if the content fulfills the Validator interface.
 func (c *Config[T]) Validate() error {
 	if v, ok := any(&c.content).(Validator); ok {
@@ -144,51 +295,6 @@ func (c *Config[T]) Validate() error {
 	return nil
 }
 
-// From reads a configuration from the given set of io.Reader.
-func From[T any](readers ...io.Reader) (*Config[T], error) {
-	if len(readers) == 0 {
-		return nil, ErrNoConfigReaders
-	}
-
-	var config *Config[T]
-	var createErr error
-	var decodeErr error
-	var validateErr error
-
-	if len(readers) == 1 {
-		// to optimize the most common case of a single reader, we do not need to
-		// go over the yaml.Node structure first.
-		config, decodeErr = fromSingle[T](readers[0])
-	} else {
-		config, createErr = newConfig[T]()
-
-		if createErr != nil {
-			return nil, createErr
-		}
-
-		for _, v := range readers {
-			if err := config.overlay(v); err != nil {
-				return nil, err
-			}
-		}
-
-		decodeErr = config.node.Decode(&config.content)
-
-		// cleanup
-		config.node = nil
-	}
-
-	if decodeErr == nil {
-		validateErr = config.Validate()
-	}
-
-	if resultErr := errors.Join(decodeErr, validateErr); resultErr != nil {
-		return nil, resultErr
-	}
-
-	return config, nil
-}
-
 // To writes a configuration to the given io.Writer.
 func (c *Config[T]) To(w io.Writer) error {
 	enc := yaml.NewEncoder(w)
@@ -196,6 +302,19 @@ func (c *Config[T]) To(w io.Writer) error {
 	encCloseErr := enc.Close()
 
 	return errors.Join(err, encCloseErr)
+}
+
+// ToFile saves a configuration to a file with the given name, replacing it in case.
+func (c *Config[T]) ToFile(path string) error {
+	f, err := os.Create(filepath.Clean(path))
+
+	if err != nil {
+		return fmt.Errorf("could not create file %s: %w", path, err)
+	}
+
+	defer func() { _ = f.Close() }()
+
+	return c.To(f)
 }
 
 // ToSecretsHidden writes the configuration to the given io.Writer and hides secret values using [SecretRE] of the
@@ -266,86 +385,6 @@ func (c *Config[T]) ToSecretsHiddenStructured(w io.Writer) error {
 	return errors.Join(encodeErr, writeErr, encCloseErr)
 }
 
-// FromFile loads a series of configuration files. The first file is considered the base, all others are
-// loaded on top of that one using the [MergeYAMLNodes] functionality.
-func FromFile[T any](paths ...string) (*Config[T], error) {
-	if len(paths) == 0 {
-		return nil, ErrNoConfigPaths
-	}
-
-	var config *Config[T]
-	var createErr error
-	var decodeErr error
-	var validateErr error
-
-	if len(paths) == 1 {
-		// to optimize the most common case of a single file, we do not need to
-		// go over the yaml.Node structure first.
-		f, err := os.Open(paths[0])
-
-		if err != nil {
-			return nil, fmt.Errorf("could not open %s: %w", paths[0], err)
-		}
-
-		defer func() { _ = f.Close() }()
-
-		config, decodeErr = fromSingle[T](f)
-	} else {
-		config, createErr = newConfig[T]()
-
-		if createErr != nil {
-			return nil, createErr
-		}
-
-		for _, addOn := range paths {
-			aErr := config.overlayFile(addOn)
-
-			if aErr != nil {
-				return nil, aErr
-			}
-		}
-
-		decodeErr = config.node.Decode(&config.content)
-
-		// cleanup
-		config.node = nil
-	}
-
-	if decodeErr == nil {
-		validateErr = config.Validate()
-	}
-
-	if resultErr := errors.Join(decodeErr, validateErr); resultErr != nil {
-		return nil, resultErr
-	}
-
-	return config, nil
-}
-
-// FromFiles loads a series of configuration files. The first file is considered the base, all others are
-// loaded on top of that one using the [MergeYAMLNodes] functionality.
-//
-// Deprecated: As of version 'v0.6.0' this function is deprecated and will be removed in the next major release.
-//
-//nolint:gocheckcompilerdirectives
-//go:fix inline
-func FromFiles[T any](paths []string) (*Config[T], error) {
-	return FromFile[T](paths...)
-}
-
-// ToFile saves a configuration to a file with the given name, replacing it in case.
-func (c *Config[T]) ToFile(path string) error {
-	f, err := os.Create(filepath.Clean(path))
-
-	if err != nil {
-		return fmt.Errorf("could not create file %s: %w", path, err)
-	}
-
-	defer func() { _ = f.Close() }()
-
-	return c.To(f)
-}
-
 // SecretRE returns a copy of the regular expression used for hiding secrets of that specific instance.
 func (c *Config[T]) SecretRE() *regexp.Regexp {
 	if c.secretRE == nil {
@@ -366,4 +405,30 @@ func (c *Config[T]) SetSecretRE(re *regexp.Regexp) error {
 	c.secretRE = re
 
 	return nil
+}
+
+//
+// Convenience Wrappers
+//
+
+// From is a convenience wrapper that reads a configuration from the given set of io.Reader.
+func From[T any](readers ...io.Reader) (*Config[T], error) {
+	return New[T](WithReader[T](readers...))
+}
+
+// FromFile is a convenience wrapper that loads a series of configuration files. The first file is considered the base,
+// all others are loaded on top of that one using the [MergeYAMLNodes] functionality.
+func FromFile[T any](paths ...string) (*Config[T], error) {
+	return New[T](WithFile[T](paths...))
+}
+
+// FromFiles is a convenience wrapper that loads a series of configuration files. The first file is considered the base,
+// all others are loaded on top of that one using the [MergeYAMLNodes] functionality.
+//
+// Deprecated: As of version 'v0.6.0' this function is deprecated and will be removed in the next major release.
+//
+//nolint:gocheckcompilerdirectives
+//go:fix inline
+func FromFiles[T any](paths []string) (*Config[T], error) {
+	return FromFile[T](paths...)
 }
