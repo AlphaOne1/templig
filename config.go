@@ -39,24 +39,22 @@ type source struct {
 	reader   io.Reader
 }
 
-func (s source) Reader() (io.Reader, func(), error) {
+func (s source) Reader() (io.ReadCloser, error) {
 	if s.reader != nil {
-		return s.reader, func() {}, nil
+		return io.NopCloser(s.reader), nil
 	}
 
 	if s.fileName != "" {
 		r, err := os.Open(s.fileName)
 
 		if err != nil {
-			return nil, func() {}, fmt.Errorf("could not open config file: %w", err)
+			return nil, fmt.Errorf("could not open config file: %w", err)
 		}
 
-		return r, func() { _ = r.Close() }, nil
+		return r, nil
 	}
 
-	return nil, func() {
-		// empty body, for security
-	}, errors.Join(ErrNoConfigPaths, ErrNoConfigReaders)
+	return nil, errors.Join(ErrNoConfigPaths, ErrNoConfigReaders)
 }
 
 // Config is the generic structure holding the configuration information for the specified type.
@@ -179,26 +177,26 @@ func (c *Config[T]) readSources() error {
 		// to optimize the most common case of a single reader, we do not need to
 		// go over the yaml.Node structure first.
 		decodeErr = func() error {
-			r, cleanup, err := c.sources[0].Reader()
-
-			defer cleanup()
+			r, err := c.sources[0].Reader()
 
 			if err != nil {
 				return err
 			}
+
+			defer func() { _ = r.Close() }()
 
 			return c.fromSingle(r)
 		}()
 	} else {
 		for _, v := range c.sources {
 			if err := func() error {
-				r, cleanup, err := v.Reader()
-
-				defer cleanup()
+				r, err := v.Reader()
 
 				if err != nil {
 					return err
 				}
+
+				defer func() { _ = r.Close() }()
 
 				return c.overlay(r)
 			}(); err != nil {

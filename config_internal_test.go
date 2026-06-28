@@ -13,9 +13,7 @@ func TestEmptySource0(t *testing.T) {
 
 	s := source{}
 
-	_, cleanup, err := s.Reader()
-
-	cleanup()
+	_, err := s.Reader()
 
 	if !errors.Is(err, ErrNoConfigPaths) || !errors.Is(err, ErrNoConfigReaders) {
 		t.Errorf("reading from empty source should have returned an error")
