@@ -418,7 +418,7 @@ func TestReadOverlayConfig(t *testing.T) {
 	t.Parallel()
 
 	config, configErr := templig.New[TestConfig](
-		templig.WithValue[TestConfig]("does", "nothing"),
+		templig.WithValue[TestConfig]("pass2", "pass2"),
 		templig.WithFile[TestConfig]("testData/test_config_0.yaml"),
 		templig.WithFile[TestConfig]("testData/test_config_0_overlay.yaml"))
 
@@ -445,7 +445,9 @@ func TestReadOverlayConfigReader(t *testing.T) {
 	f0, _ := os.Open("testData/test_config_0.yaml")
 	f1, _ := os.Open("testData/test_config_0_overlay.yaml")
 
-	config, configErr := templig.From[TestConfig](f0, f1)
+	config, configErr := templig.New[TestConfig](
+		templig.WithValue[TestConfig]("pass2", "pass2"),
+		templig.WithReader[TestConfig](f0, f1))
 
 	if configErr != nil {
 		t.Errorf("no error expected reading multiple files: %v", configErr)
@@ -860,7 +862,7 @@ func TestSetSecretRENil(t *testing.T) {
 		templig.WithFile[TestConfig]("testData/test_config_0.yaml"),
 		templig.WithSecretRE[TestConfig](nil))
 
-	if err == nil {
+	if !errors.Is(err, templig.ErrNoSecretRegexp) {
 		t.Errorf("setting secret regex to nil should return an error")
 	}
 }
@@ -881,7 +883,8 @@ func TestDefaultSecretRENil(t *testing.T) {
 
 	templig.SecretRE = nil
 
-	if _, err := templig.FromFile[TestConfig]("testData/test_config_0.yaml"); err == nil {
+	if _, err := templig.FromFile[TestConfig](
+		"testData/test_config_0.yaml"); !errors.Is(err, templig.ErrNoSecretRegexp) {
 		t.Errorf("reading config with default secret regex nil should return an error")
 	}
 

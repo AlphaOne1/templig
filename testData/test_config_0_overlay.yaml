@@ -3,4 +3,4 @@
 
 conn:
     passes:
-      - pass2
+      - {{ .Values.pass2 | default "unknown" }}

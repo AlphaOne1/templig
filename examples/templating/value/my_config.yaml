@@ -3,4 +3,4 @@
 
 id:   23
 name: Interesting Name
-pass: {{ .Value.pass | required "pass value required" | quote }}
+pass: {{ .Values.pass | required "pass value required" | quote }}

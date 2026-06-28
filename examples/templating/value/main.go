@@ -24,18 +24,18 @@ type Config struct {
 // main reads a configuration file. The configuration file then uses the .Value variable to read the password.
 // To insert a custom variable into the configuration, the WithValue option is used.
 func main() {
-	c, confErr := templig.New[Config](
+	cfg, confErr := templig.New[Config](
 		templig.WithFile[Config]("my_config.yaml"),
 		templig.WithValue[Config]("pass", "secret"))
 
 	fmt.Printf("read errors: %v\n", confErr)
 
 	if confErr == nil {
-		fmt.Printf("ID:   %v\n", c.Get().ID)
-		fmt.Printf("Name: %v\n", c.Get().Name)
-		fmt.Printf("Pass: %v\n", strings.Repeat("*", len(c.Get().Pass)))
+		fmt.Printf("ID:   %v\n", cfg.Get().ID)
+		fmt.Printf("Name: %v\n", cfg.Get().Name)
+		fmt.Printf("Pass: %v\n", strings.Repeat("*", len(cfg.Get().Pass)))
 		fmt.Println("Config printed by templig with hidden secrets:")
 
-		_ = c.ToSecretsHiddenStructured(os.Stdout)
+		_ = cfg.ToSecretsHiddenStructured(os.Stdout)
 	}
 }
