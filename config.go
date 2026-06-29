@@ -66,6 +66,9 @@ type Config[T any] struct {
 	values   map[string]any
 }
 
+// configurable defines an interface for managing configuration sources, adding key-value pairs,
+// and setting secret patterns. It is used to conveniently configure the Config structure as directly operating
+// on it would cause all functional options to be amended with the generic type.
 type configurable interface {
 	SetSecretRE(newSecretRE *regexp.Regexp) error
 	addSources(sources ...source) error
