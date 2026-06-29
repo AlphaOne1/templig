@@ -317,10 +317,10 @@ func TestReadConfig(t *testing.T) {
 				os.Args = append(os.Args, test.args...)
 			}
 
-			options := []templig.Option[TestConfig]{}
+			var options []templig.Option
 
 			for k, v := range test.values {
-				options = append(options, templig.WithValue[TestConfig](k, v))
+				options = append(options, templig.WithValue(k, v))
 			}
 
 			var config *templig.Config[TestConfig]
@@ -328,16 +328,16 @@ func TestReadConfig(t *testing.T) {
 
 			switch {
 			case len(test.in) > 0:
-				options = append(options, templig.WithReader[TestConfig](&testBuf))
+				options = append(options, templig.WithReader(&testBuf))
 			case len(test.inFile) > 0:
-				options = append(options, templig.WithFile[TestConfig](test.inFile))
+				options = append(options, templig.WithFile(test.inFile))
 			default:
 				t.Errorf("%v: neither input data nor input file given", testIndex)
 			}
 
 			config, fromErr = templig.New[TestConfig](options...)
 
-			if !test.wantErr && config.SecretRE() == nil {
+			if !test.wantErr && (config == nil || config.SecretRE() == nil) {
 				t.Errorf("%v: wanted SecretRE to be initialized", testIndex)
 			}
 
@@ -418,9 +418,9 @@ func TestReadOverlayConfig(t *testing.T) {
 	t.Parallel()
 
 	config, configErr := templig.New[TestConfig](
-		templig.WithValue[TestConfig]("pass2", "pass2"),
-		templig.WithFile[TestConfig]("testData/test_config_0.yaml"),
-		templig.WithFile[TestConfig]("testData/test_config_0_overlay.yaml"))
+		templig.WithValue("pass2", "pass2"),
+		templig.WithFile("testData/test_config_0.yaml"),
+		templig.WithFile("testData/test_config_0_overlay.yaml"))
 
 	if configErr != nil {
 		t.Errorf("no error expected reading multiple files: %v", configErr)
@@ -446,8 +446,8 @@ func TestReadOverlayConfigReader(t *testing.T) {
 	f1, _ := os.Open("testData/test_config_0_overlay.yaml")
 
 	config, configErr := templig.New[TestConfig](
-		templig.WithValue[TestConfig]("pass2", "pass2"),
-		templig.WithReader[TestConfig](f0, f1))
+		templig.WithValue("pass2", "pass2"),
+		templig.WithReader(f0, f1))
 
 	if configErr != nil {
 		t.Errorf("no error expected reading multiple files: %v", configErr)
@@ -859,8 +859,8 @@ func TestSetSecretRENil(t *testing.T) {
 	t.Parallel()
 
 	_, err := templig.New[TestConfig](
-		templig.WithFile[TestConfig]("testData/test_config_0.yaml"),
-		templig.WithSecretRE[TestConfig](nil))
+		templig.WithFile("testData/test_config_0.yaml"),
+		templig.WithSecretRE(nil))
 
 	if !errors.Is(err, templig.ErrNoSecretRegexp) {
 		t.Errorf("setting secret regex to nil should return an error")

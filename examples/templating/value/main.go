@@ -25,8 +25,8 @@ type Config struct {
 // To insert a custom variable into the configuration, the WithValue option is used.
 func main() {
 	cfg, confErr := templig.New[Config](
-		templig.WithFile[Config]("my_config.yaml"),
-		templig.WithValue[Config]("pass", "secret"))
+		templig.WithFile("my_config.yaml"),
+		templig.WithValue("pass", "secret"))
 
 	fmt.Printf("read errors: %v\n", confErr)
 

@@ -371,8 +371,8 @@ type Config struct {
 // main will read and display the configuration
 func main() {
 	c, confErr := templig.New[Config](
-		templig.WithFile[Config]("my_config.yaml"),
-		templig.WithValue[Config]("pass", "secret"))
+		templig.WithFile("my_config.yaml"),
+		templig.WithValue("pass", "secret"))
   
 	fmt.Printf("read errors: %v", confErr)
 
