@@ -91,6 +91,7 @@ linters:
             max-distance: 10
             ignore-decls:
                 - c *Config[T]
+                - c configurable
 
         whitespace:
             multi-if: true

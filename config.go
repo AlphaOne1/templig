@@ -66,71 +66,91 @@ type Config[T any] struct {
 	values   map[string]any
 }
 
+type configurable interface {
+	SetSecretRE(newSecretRE *regexp.Regexp) error
+	addSources(sources ...source) error
+	addValue(key string, val any) error
+}
+
 // Option defines a functional option for configuring a Config instance.
 // It applies modifications or settings to the Config.
-type Option[T any] func(*Config[T]) error
+type Option func(configurable) error
 
 // WithSecretRE returns an Option to set the regular expression used for hiding secrets in the configuration.
-func WithSecretRE[T any](re *regexp.Regexp) Option[T] {
-	return func(c *Config[T]) error {
+func WithSecretRE(re *regexp.Regexp) Option {
+	return func(c configurable) error {
 		return c.SetSecretRE(re)
 	}
 }
 
+func (c *Config[T]) addSources(sources ...source) error {
+	if len(sources) == 0 {
+		return errors.Join(ErrNoConfigPaths, ErrNoConfigReaders)
+	}
+
+	newSources := make([]source, len(c.sources)+len(sources))
+
+	copy(newSources, c.sources)
+
+	for i, j := len(c.sources), 0; j < len(sources); i, j = i+1, j+1 {
+		newSources[i] = sources[j]
+	}
+
+	c.sources = newSources
+
+	return nil
+}
+
 // WithFile creates an Option to specify file paths as configuration sources for the Config instance.
-func WithFile[T any](fileNames ...string) Option[T] {
-	return func(c *Config[T]) error {
+func WithFile(fileNames ...string) Option {
+	return func(c configurable) error {
 		if len(fileNames) == 0 {
 			return ErrNoConfigPaths
 		}
 
-		sources := make([]source, len(c.sources)+len(fileNames))
+		sources := make([]source, len(fileNames))
 
-		copy(sources, c.sources)
-
-		for i, j := len(c.sources), 0; j < len(fileNames); i, j = i+1, j+1 {
-			sources[i] = source{fileName: fileNames[j]}
+		for i := range fileNames {
+			sources[i] = source{fileName: fileNames[i]}
 		}
 
-		c.sources = sources
-
-		return nil
+		return c.addSources(sources...)
 	}
 }
 
 // WithReader creates an Option that adds the provided io.Reader instances as configuration sources.
-func WithReader[T any](readers ...io.Reader) Option[T] {
-	return func(c *Config[T]) error {
+func WithReader(readers ...io.Reader) Option {
+	return func(c configurable) error {
 		if len(readers) == 0 {
 			return ErrNoConfigReaders
 		}
 
-		sources := make([]source, len(c.sources)+len(readers))
+		sources := make([]source, len(readers))
 
-		copy(sources, c.sources)
-
-		for i, j := len(c.sources), 0; j < len(readers); i, j = i+1, j+1 {
-			sources[i] = source{reader: readers[j]}
+		for i := range readers {
+			sources[i] = source{reader: readers[i]}
 		}
 
-		c.sources = sources
-
-		return nil
+		return c.addSources(sources...)
 	}
 }
 
-// WithValue creates an Option that sets a key-value pair in the configuration's values map.
-func WithValue[T any](k string, v any) Option[T] {
-	return func(c *Config[T]) error {
-		c.values[k] = v
+func (c *Config[T]) addValue(key string, value any) error {
+	c.values[key] = value
 
-		return nil
+	return nil
+}
+
+// WithValue creates an Option that sets a key-value pair in the configuration's values map.
+func WithValue(key string, value any) Option {
+	return func(c configurable) error {
+		return c.addValue(key, value)
 	}
 }
 
 // New creates a new Config instance of type T using the provided options and
 // returns it along with any errors encountered.
-func New[T any](opts ...Option[T]) (*Config[T], error) {
+func New[T any](opts ...Option) (*Config[T], error) {
 	c := new(Config[T])
 	c.values = make(map[string]any)
 
@@ -256,11 +276,11 @@ func (c *Config[T]) fromSingle(r io.Reader) error {
 // overlay is called repeatedly and overlays the current intermediate configuration
 // with the content of the given io.Reader.
 func (c *Config[T]) overlay(r io.Reader) error {
-	opts := make([]Option[yaml.Node], 0, len(c.values)+1)
-	opts = append(opts, WithReader[yaml.Node](r))
+	opts := make([]Option, 0, len(c.values)+1)
+	opts = append(opts, WithReader(r))
 
 	for k, v := range c.values {
-		opts = append(opts, WithValue[yaml.Node](k, v))
+		opts = append(opts, WithValue(k, v))
 	}
 
 	additionalConfig, aErr := New[yaml.Node](opts...)
@@ -413,13 +433,13 @@ func (c *Config[T]) SetSecretRE(re *regexp.Regexp) error {
 
 // From is a convenience wrapper that reads a configuration from the given set of io.Reader.
 func From[T any](readers ...io.Reader) (*Config[T], error) {
-	return New[T](WithReader[T](readers...))
+	return New[T](WithReader(readers...))
 }
 
 // FromFile is a convenience wrapper that loads a series of configuration files. The first file is considered the base,
 // all others are loaded on top of that one using the [MergeYAMLNodes] functionality.
 func FromFile[T any](paths ...string) (*Config[T], error) {
-	return New[T](WithFile[T](paths...))
+	return New[T](WithFile(paths...))
 }
 
 // FromFiles is a convenience wrapper that loads a series of configuration files. The first file is considered the base,
