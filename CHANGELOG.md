@@ -2,6 +2,11 @@
      SPDX-License-Identifier: MPL-2.0
 -->
 
+Release Next
+============
+
+- update dependencies
+
 Release 0.10.0
 ==============
 
