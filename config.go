@@ -450,7 +450,6 @@ func FromFile[T any](paths ...string) (*Config[T], error) {
 //
 // Deprecated: As of version 'v0.6.0' this function is deprecated and will be removed in the next major release.
 //
-//nolint:gocheckcompilerdirectives
 //go:fix inline
 func FromFiles[T any](paths []string) (*Config[T], error) {
 	return FromFile[T](paths...)

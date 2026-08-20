@@ -581,7 +581,7 @@ func TestNoFiles(t *testing.T) {
 func TestNoFilesDeprecated(t *testing.T) {
 	t.Parallel()
 
-	c, fromErr := templig.FromFiles[TestConfig]([]string{}) //nolint:govet // test as long as we provide it
+	c, fromErr := templig.FromFiles[TestConfig]([]string{})
 
 	if fromErr == nil {
 		t.Errorf("reading from broken reader should have returned an error")
