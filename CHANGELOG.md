@@ -2,6 +2,11 @@
      SPDX-License-Identifier: MPL-2.0
 -->
 
+Release Next
+============
+
+- integrated SBOM generation
+
 Release 0.10.1
 ==============
 
