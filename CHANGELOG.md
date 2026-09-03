@@ -6,6 +6,8 @@ Release Next
 ============
 
 - integrated SBOM generation
+- added example for how to watch for changes in configuration inputs
+- changed to self-maintained GoReportCard
 
 Release 0.10.1
 ==============
