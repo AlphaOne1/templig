@@ -162,4 +162,4 @@ jobs:
                 cat ${BADGE_FILE}
                 
                 # Update the Gist using the GitHub CLI
-                gh gist edit "$GIST_ID" ${BADGE_FILE}
+                gh gist edit "$GIST_ID" --add ${BADGE_FILE}
