@@ -327,17 +327,22 @@ func (c *Config[T]) To(w io.Writer) error {
 	return errors.Join(err, encCloseErr)
 }
 
-// ToFile saves a configuration to a file with the given name, replacing it in case.
+// ToFile saves a configuration to a file with the given name, replacing it in case. As configuration files
+// also may contain secrets, the access right are initially set to only the owner. Preexisting files keep
+// their original access rights.
 func (c *Config[T]) ToFile(path string) error {
-	f, err := os.Create(filepath.Clean(path))
+	const NewFilePermissions = 0600
+
+	f, err := os.OpenFile(filepath.Clean(path), os.O_WRONLY|os.O_CREATE|os.O_TRUNC, NewFilePermissions)
 
 	if err != nil {
 		return fmt.Errorf("could not create file %s: %w", path, err)
 	}
 
-	defer func() { _ = f.Close() }()
+	writeErr := c.To(f)
+	closeErr := wrapError("could not close file "+path, f.Close())
 
-	return c.To(f)
+	return errors.Join(writeErr, closeErr)
 }
 
 // ToSecretsHidden writes the configuration to the given io.Writer and hides secret values using [SecretRE] of the
@@ -360,7 +365,7 @@ func (c *Config[T]) ToSecretsHidden(w io.Writer) error {
 	var encCloseErr error
 	node := yaml.Node{}
 
-	encodeErr := node.Encode(c.content)
+	encodeErr := node.Encode(&c.content)
 
 	if encodeErr == nil {
 		HideSecrets(&node, true, c.secretRE)
@@ -395,7 +400,7 @@ func (c *Config[T]) ToSecretsHiddenStructured(w io.Writer) error {
 	var encCloseErr error
 	node := yaml.Node{}
 
-	encodeErr := node.Encode(c.content)
+	encodeErr := node.Encode(&c.content)
 
 	if encodeErr == nil {
 		HideSecrets(&node, false, c.secretRE)

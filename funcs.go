@@ -5,7 +5,9 @@ package templig
 
 import (
 	"errors"
+	"fmt"
 	"io"
+	"io/fs"
 	"maps"
 	"os"
 	"path/filepath"
@@ -47,12 +49,15 @@ func required(warn string, val any) (any, error) {
 
 // readFile is a template function to read a file and store its content into a string.
 // If the file does not exist, an empty string is generated, facilitating the use of `required` for customized
-// user interaction.
+// user interaction. All other errors, e.g., missing permissions, are propagated.
 func readFile(fileName string) (any, error) {
 	file, err := os.Open(filepath.Clean(fileName))
 
-	if err != nil {
+	switch {
+	case errors.Is(err, fs.ErrNotExist):
 		return "", nil
+	case err != nil:
+		return "", fmt.Errorf("could not open file %s: %w", fileName, err)
 	}
 
 	defer func() { _ = file.Close() }()
