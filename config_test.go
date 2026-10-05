@@ -7,8 +7,11 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
+	"io"
 	"os"
+	"path/filepath"
 	"regexp"
+	"runtime"
 	"slices"
 	"strings"
 	"testing"
@@ -658,6 +661,48 @@ func TestWriteProtectedFile(t *testing.T) {
 	}
 }
 
+func TestWriteFilePermissions(t *testing.T) {
+	t.Parallel()
+
+	if runtime.GOOS == "windows" {
+		t.Skip("unix file permissions not available on windows")
+	}
+
+	c, _ := templig.FromFile[TestConfig]("testData/test_config_0.yaml")
+	path := filepath.Join(t.TempDir(), "config.yaml")
+
+	if err := c.ToFile(path); err != nil {
+		t.Fatalf("writing to file should work: %v", err)
+	}
+
+	info, statErr := os.Stat(path)
+
+	if statErr != nil {
+		t.Fatalf("could not stat written file: %v", statErr)
+	}
+
+	if perm := info.Mode().Perm(); perm != 0600 {
+		t.Errorf("expected permissions 0600 for new file, got %#o", perm)
+	}
+}
+
+func TestReadFileError(t *testing.T) {
+	t.Parallel()
+
+	if runtime.GOOS == "windows" {
+		t.Skip("path below a regular file is reported as not existing on windows")
+	}
+
+	// a path below a regular file exists neither, but gives ENOTDIR instead of ENOENT
+	_, err := templig.From[TestConfig](strings.NewReader(
+		`name: {{ read "testData/secret.txt/x" }}`,
+	))
+
+	if err == nil {
+		t.Errorf("reading an unreadable file should have returned an error")
+	}
+}
+
 func TestSecretsHidden(t *testing.T) {
 	t.Parallel()
 
@@ -699,6 +744,38 @@ func TestSecretsHiddenStructured(t *testing.T) {
 
 	if strings.Count(buf.String(), "'*****'") != 2 {
 		t.Errorf("did not find replaced pass secrets:\n%v", buf.String())
+	}
+}
+
+type TestConfigMarshaler struct {
+	Name string `yaml:"name"`
+}
+
+func (c *TestConfigMarshaler) MarshalYAML() (any, error) {
+	return map[string]string{"name": "marshaled-" + c.Name}, nil
+}
+
+func TestSecretsHiddenPointerMarshaler(t *testing.T) {
+	t.Parallel()
+
+	c, _ := templig.From[TestConfigMarshaler](strings.NewReader("name: x\n"))
+
+	outputs := map[string]func(io.Writer) error{
+		"To":                        c.To,
+		"ToSecretsHidden":           c.ToSecretsHidden,
+		"ToSecretsHiddenStructured": c.ToSecretsHiddenStructured,
+	}
+
+	for name, output := range outputs {
+		buf := bytes.Buffer{}
+
+		if err := output(&buf); err != nil {
+			t.Errorf("%v: could not write config: %v", name, err)
+		}
+
+		if buf.String() != "name: marshaled-x\n" {
+			t.Errorf("%v: custom marshaler with pointer receiver not used: \n%v", name, buf.String())
+		}
 	}
 }
 
