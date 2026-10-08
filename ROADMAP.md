@@ -11,12 +11,14 @@ could be improved upon:
 Upcoming
 --------
 
-* __Soon: Command-Line Argument Support__
+* __Soon: Overlay Replacement on Arrays__
 
-  Currently *templig* does not include dedicated support for command-line
-  arguments. It is the last missing piece to cover classical possible input
-  vectors. If we could provide command-line argument read access to templates in
-  an easy-to-use way, it would further improve *templig*'s applicability.
+  Arrays are currently merged, following the same argument as merging associative
+  arrays or objects. However, replacing the content of an array could be desirable
+  and could be implemented using a custom YAML annotation, e.g., `!replace`.
+
+  This would also allow for replacing an existing base object with `null`, as this
+  is currently not possible due to a type mismatch.
 
 * __In Design: REST Calls__
 

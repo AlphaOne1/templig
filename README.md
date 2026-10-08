@@ -112,7 +112,7 @@ templig
 engine of Go and the functions best known from [Helm](https://github.com/helm/helm) charts, originating from
 [Masterminds/sprig](https://github.com/Masterminds/sprig).
 
-Its primary goal is to enable dynamic configuration files, that have access to the system environment to fill
+Its primary goal is to enable dynamic configuration files that have access to the system environment to fill
 information using functions like `env` and `read`. To facilitate different environments, overlays can be defined
 that amend a base configuration with environment-specific attributes and changes.
 Configurations that implement the `Validator` interface also have automated checking enabled upon loading.
@@ -121,8 +121,8 @@ This is not the first configuration library and surely will not be the last. The
 elaborate of them may be [viper](https://github.com/spf13/viper). The difference to basically all of these is that
 they burden the developer to provide all the means to gather the configuration information. So if the developer
 does not foresee a means to read a value from the environment, a user cannot use this. *templig* turns that
-around and gives the developer a simple interface to do what he wants—read a config—and gives the user the means
-to compile his configuration in whatever way he sees fit. Experience shows that the target system environments can
+around and gives the developers a simple interface to do what they want—read a config—and gives the users the means
+to compile their configuration in whatever way they see fit. Experience shows that the target system environments can
 be extremely diverse, and limiting the possibilities of end users directly limits the spectrum of application.
 
 Installation
@@ -180,7 +180,7 @@ type Config struct {
 func main() {
 	c, confErr := templig.FromFile[Config]("my_config.yaml")
 
-	fmt.Printf("read errors: %v", confErr)
+	fmt.Printf("read errors: %v\n", confErr)
 
 	if confErr == nil {
 		fmt.Printf("ID:   %v\n", c.Get().ID)
@@ -198,6 +198,8 @@ ID:   23
 Name: Interesting Name
 ```
 
+The complete example can be found [here](examples/simple).
+
 
 ### Reading with Overlays
 
@@ -208,7 +210,7 @@ id:   23
 name: Interesting DevName
 ```
 
-and a file that contains specific configuration for e.g. the production environment `my_prod_overlay.yaml`:
+and a file that contains specific configuration for e.g., the production environment `my_prod_overlay.yaml`:
 
 ```yaml
 name: Important ProdName
@@ -238,7 +240,7 @@ func main() {
 		"my_prod_overlay.yaml",
 	)
 
-	fmt.Printf("read errors: %v", confErr)
+	fmt.Printf("read errors: %v\n", confErr)
 
 	if confErr == nil {
 		fmt.Printf("ID:   %v\n", c.Get().ID)
@@ -257,6 +259,7 @@ Name: Important ProdName
 ```
 
 As expected, the value of `Name` was replaced by the one provided in overlay configuration.
+The complete example can be found [here](examples/overlay).
 
 
 ### Template Functionality
@@ -271,7 +274,7 @@ convenience:
 |----------|---------------------------------------------------------------------|------------------------------------|
 | arg      | reads the value of the command line argument with the given name    | [Link](examples/templating/arg)    |
 | hasArg   | true if an argument with the given name is present, false otherwise | [Link](examples/templating/hasArg) |
-| required | checks that its second argument is not zero length or nil           | [Link](examples/templating/env)    |
+| required | checks that its second argument is not zero length or nil           | [Link](examples/templating/value)  |
 | read     | reads the content of a file                                         | [Link](examples/templating/read)   |
 
 The expansion of the templated parts is done __before__ overlaying takes place. Any errors of templating will thus be
@@ -321,7 +324,7 @@ type Config struct {
 func main() {
 	c, confErr := templig.FromFile[Config]("my_config.yaml")
 
-	fmt.Printf("read errors: %v", confErr)
+	fmt.Printf("read errors: %v\n", confErr)
 
 	if confErr == nil {
 		fmt.Printf("ID:   %v\n", c.Get().ID)
@@ -334,10 +337,10 @@ func main() {
 #### Using Custom Values
 
 So far, the cases involved the convenience wrappers provided by *templig*. Beneath that layer there is a standard
-functional options pattern to generate a *templig* configuration. All options start with the `With` preix.
+functional options pattern to generate a *templig* configuration. All options start with the `With` prefix.
 
-So far, it was not possible for a programmer to provide own values to the configuration other than defining custom
-environment variables. To address this shortcoming, custom values are introduced, that allow the configuration to
+So far, it was not possible for programmers to provide their own values to the configuration other than defining custom
+environment variables. To address this shortcoming, custom values are introduced that allow the configuration to
 get that information via the `.Values` variable.
 
 Having a templated configuration file like this one:
@@ -374,8 +377,8 @@ func main() {
 	c, confErr := templig.New[Config](
 		templig.WithFile("my_config.yaml"),
 		templig.WithValue("pass", "secret"))
-  
-	fmt.Printf("read errors: %v", confErr)
+
+	fmt.Printf("read errors: %v\n", confErr)
 
 	if confErr == nil {
 		fmt.Printf("ID:   %v\n", c.Get().ID)
@@ -385,8 +388,9 @@ func main() {
 }
 ```
 
-It should be noted, that using the `New` method with the functional options provides also the means to intermix file
-and io.Reader inputs freely.
+It should be noted that using the `New` method with the functional options also provides the means to freely intermix
+file and io.Reader inputs. The complete example can be found [here](examples/templating/value).
+
 
 ### Validation
 
@@ -400,22 +404,22 @@ read—whether its structure should be considered valid and report errors accord
 package main
 
 import (
-    "errors"
-    "fmt"
+	"errors"
+	"fmt"
 
 	"github.com/AlphaOne1/templig"
 )
 
 // Config is the configuration structure
 type Config struct {
-    ID   int    `yaml:"id"`
-    Name string `yaml:"name"`
+	ID   int    `yaml:"id"`
+	Name string `yaml:"name"`
 }
 
 // Validate fulfills the Validator interface provided by templig.
-// This method is called, if it is defined. It influences the outcome of the configuration reading.
+// This method is called if it is defined. It influences the outcome of the configuration reading.
 func (c *Config) Validate() error {
-    var result []error
+	var result []error
 
 	if len(c.Name) == 0 {
 		result = append(result, errors.New("name is required"))
@@ -441,7 +445,8 @@ func main() {
 
 Validation functionality can be as simple as in this example. But as the complexity of the configuration grows,
 automated tools to generate the configuration structure and basic consistency checks could be employed. These use
-e.g. JSON Schema or its embedded form in OpenAPI 2 or 3.
+e.g. JSON Schema or its embedded form in OpenAPI 2 or 3. The complete example of the simple validation above can
+be found [here](examples/validate).
 
 A non-exhaustive list of these:
 
@@ -471,7 +476,7 @@ plain text to any location.
       This program will produce the following, structurally identical output to the input configuration:
 
       ```yaml
-      id:   23
+      id: 23
       name: Interesting Name
       passes:
         - secretPass0
@@ -489,9 +494,9 @@ plain text to any location.
       With the new output to be:
 
       ```yaml
-      id:   23
+      id: 23
       name: Interesting Name
-      pass: '*'
+      passes: '*'
       ```
 
    3. `ToSecretsHiddenStructured` writes the configuration, hiding secrets, but letting their structure recognizable.
@@ -505,14 +510,14 @@ plain text to any location.
       With the new output to be:
 
       ```yaml
-      id:   23
+      id: 23
       name: Interesting Name
-      pass:
+      passes:
         - '***********'
         - '****************'
       ```
 
-Single secrets are always replaced by a string of `*` of equal length until a length of 32. Secrets longer than 32
+Single secrets are always replaced by a string of `*` of equal length until a length of 31. Secrets longer than 31
 characters are replaced by a string of `**` followed by the number of characters and a final `**`, e.g. `**42**`.
 An example usage can be found [here](examples/templating/env).
 
@@ -524,3 +529,28 @@ identifications, one could use the following (with `SecretDefaultRE` containing 
 c, _ := templig.FromFile[Config]("my_config.yaml")
 c.SetSecretRE(regexp.MustCompile(templig.SecretDefaultRE + "|identification"))
 ```
+
+### Detecting Configuration Changes
+
+*templig* does not provide change management itself, as the configuration sources vary and are not under its control.
+E.g., a network connection given to `templig.WithReader` cannot easily be read again for a comparison run. Changes can
+nevertheless be detected by writing the unmodified configuration via the `To` method into a hash function and comparing
+the resulting hash values. Compared to e.g. `reflect.DeepEqual`, this avoids keeping a potentially large configuration
+structure in memory for a prolonged time:
+
+```go
+hasher := sha3.New384()
+_ = c.To(hasher) // unmodified configuration, no secret hiding
+oldHash := hasher.Sum(nil)
+
+// ... read the configuration again into cNew ...
+
+hasher.Reset()
+_ = cNew.To(hasher)
+
+if !bytes.Equal(oldHash, hasher.Sum(nil)) {
+	slog.Info("config changed")
+}
+```
+
+The complete example can be found [here](examples/configChange).

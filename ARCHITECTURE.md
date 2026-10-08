@@ -17,6 +17,8 @@ graph TD
         ConfigFile[/Templated Config File: .yaml/]
         ConfigTemplate[/Templated Config YAML/]
         EnvVars[/Environment Variables/]
+        CmdArgs[/Command Line Arguments/]
+        Values[/Custom Values/]
         RefFiles[/Referenced Files/]
         ConfigTypes[/Config Types/]
     end
@@ -51,11 +53,13 @@ graph TD
     end
 
     %% Input --> Core
-    ConfigFile                 --> FileLoader
-    ConfigTemplate -- "Reader" --> TemplateLoader
-    EnvVars                    --> Renderer
-    RefFiles                   --> Renderer
-    ConfigTypes                --> Parser
+    ConfigFile                     --> FileLoader
+    ConfigTemplate -- "Reader"     --> TemplateLoader
+    EnvVars        -- "env"        --> Renderer
+    CmdArgs        -- "arg/hasArg" --> Renderer
+    Values         -- ".Values"    --> Renderer
+    RefFiles       -- "read"       --> Renderer
+    ConfigTypes                    --> Parser
    
     %% Core --> Output
     HasValidator   --"no" --> Config
@@ -72,7 +76,8 @@ the rendered output is not only syntactically correct but also semantically
 compliant with the user's expected data structure.
 
 The *templig* Core operates entirely in-memory and does not require network
-access. All inputs (templates, environment variables) are processed through the
-Go template engine before being validated against the expected structure. Should
-a *templig* user decide to extend the core with functionality violating this
-promise it is outside the scope of this document and project.
+access. All inputs (templates, environment variables, command-line arguments,
+custom values and referenced files) are processed through the Go template engine
+before being validated against the expected structure. Should a *templig* user
+decide to extend the core with functionality violating that promise, it is
+outside the scope of this document and project.
