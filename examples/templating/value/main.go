@@ -1,9 +1,9 @@
 // SPDX-FileCopyrightText: 2026 The templig contributors.
 // SPDX-License-Identifier: MPL-2.0
 
-// Package main of the templating variable `.Value` example.
-// This example demonstrates the use of the `.Value` variable in a templated configuration.
-// The use of the `required` function is demonstrated in conjunction with `.Value`.
+// Package main of the templating variable `.Values` example.
+// This example demonstrates the use of the `.Values` variable in a templated configuration.
+// The use of the `required` function is demonstrated in conjunction with `.Values`.
 package main
 
 import (
@@ -21,7 +21,7 @@ type Config struct {
 	Pass string `yaml:"pass"`
 }
 
-// main reads a configuration file. The configuration file then uses the .Value variable to read the password.
+// main reads a configuration file. The configuration file then uses the .Values variable to read the password.
 // To insert a custom variable into the configuration, the WithValue option is used.
 func main() {
 	cfg, confErr := templig.New[Config](

@@ -14,9 +14,9 @@ import (
 	"github.com/xeipuuv/gojsonschema"
 )
 
-// Validate uses the xeipuuv/gojsonschemna library to load a json schema
+// Validate uses the xeipuuv/gojsonschema library to load a JSON schema
 // and validates the loaded configuration against that schema.
-// There are of course other libraries, like the atombender/go-jsonschema, but they do not support to validate the
+// There are, of course, other libraries, like the atombender/go-jsonschema, but they do not support validating the
 // configuration object directly but need a prior conversion to map[string]any or JSON. It is important to run the
 // validation on the final configuration, as there may be overlays and template invocations that influence the
 // validity.

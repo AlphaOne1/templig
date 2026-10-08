@@ -12,7 +12,7 @@ import (
 )
 
 // SecretDefaultRE is the default regular expression used to identify secret values automatically. It is deliberately
-// broad matching, as we perfer false positive over false negative matching.
+// broad matching, as we prefer false positive to false negative matching.
 const SecretDefaultRE = "(?i)key|secret|pass(?:word)?|cert(?:ificate)?|token"
 
 // SecretRE is the regular expression used to identify secret values automatically.

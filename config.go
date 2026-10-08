@@ -28,7 +28,7 @@ var (
 	ErrNoSecretRegexp = errors.New("no secret regular expression given")
 )
 
-// Validator is the interface to facility validity checks on configuration types.
+// Validator is the interface to facilitate validity checks on configuration types.
 type Validator interface {
 	// Validate is used to Validate a configuration.
 	Validate() error
@@ -359,7 +359,7 @@ func (c *Config[T]) ToFile(path string) error {
 // thus will be replaced by
 //
 //	id: id0
-//	secrets: *
+//	secrets: '*'
 func (c *Config[T]) ToSecretsHidden(w io.Writer) error {
 	var writeErr error
 	var encCloseErr error
@@ -378,8 +378,9 @@ func (c *Config[T]) ToSecretsHidden(w io.Writer) error {
 	return errors.Join(encodeErr, writeErr, encCloseErr)
 }
 
-// ToSecretsHiddenStructured writes the configuration to the given io.Writer
-// and hides secret values using the [SecretRE].
+// ToSecretsHiddenStructured writes the configuration to the given io.Writer and hides
+// secret values using the [SecretRE] of the initialization time of the instance if not
+// set to another value using `SetSecretRE`.
 // Strings are replaced with the number of * corresponding to their length.
 // Substructures containing secrets are replaced with a corresponding structure of '*'.
 // The following example
@@ -393,8 +394,8 @@ func (c *Config[T]) ToSecretsHidden(w io.Writer) error {
 //
 //	id: id0
 //	secrets:
-//	  - *******
-//	  - *******
+//	  - '*******'
+//	  -' *******'
 func (c *Config[T]) ToSecretsHiddenStructured(w io.Writer) error {
 	var writeErr error
 	var encCloseErr error

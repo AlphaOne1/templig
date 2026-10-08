@@ -2,17 +2,18 @@
      SPDX-License-Identifier: MPL-2.0
 -->
 
-Release Next
-============
+Release 0.10.2
+==============
 
 - integrated SBOM generation
-- added example for how to watch for changes in configuration inputs
+- added an example for how to watch for changes in configuration inputs
 - changed to self-maintained GoReportCard
 - fixed `ToSecretsHidden` and `ToSecretsHiddenStructured` ignoring custom
   `MarshalYAML` methods with pointer receivers.
 - `ToFile` creates new files with permissions `0600` and reports errors on
   `Close`
 - `read` template function reports errors other than non-existing files
+- updated documentation
 - update dependencies
 
 Release 0.10.1
