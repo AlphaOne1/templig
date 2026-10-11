@@ -482,6 +482,60 @@ func TestReadOverlayConfigMismatch(t *testing.T) {
 	}
 }
 
+func TestReadOverlayConfigEmpty(t *testing.T) {
+	t.Parallel()
+
+	config, configErr := templig.FromFile[TestConfig](
+		"testData/test_empty.yaml",
+		"testData/test_config_0.yaml",
+		"testData/test_empty.yaml",
+	)
+
+	if configErr != nil {
+		t.Fatalf("no error expected reading files with empty overlays: %v", configErr)
+	}
+
+	if config.Get().ID != 9 || config.Get().Name != "Name0" {
+		t.Errorf("expected content of test_config_0.yaml, but got %+v", *config.Get())
+	}
+}
+
+func TestReadOverlayConfigAllEmpty(t *testing.T) {
+	t.Parallel()
+
+	_, configErr := templig.From[TestConfig](
+		strings.NewReader(""),
+		strings.NewReader("# only a comment"),
+	)
+
+	if configErr == nil {
+		t.Errorf("error expected reading only empty sources")
+	}
+}
+
+func TestReadOverlayConfigNull(t *testing.T) {
+	t.Parallel()
+
+	// using ~ and direct newline as null
+	config, configErr := templig.From[TestConfig](
+		strings.NewReader("id: 9\nconn:\n"),
+		strings.NewReader("conn:\n  url: https://www.tests.to\n"),
+		strings.NewReader("id: ~\n"),
+	)
+
+	if configErr != nil {
+		t.Fatalf("no error expected overlaying null values: %v", configErr)
+	}
+
+	if config.Get().ID != 0 {
+		t.Errorf("expected id to be reset by null, but got %v", config.Get().ID)
+	}
+
+	if config.Get().Conn == nil || config.Get().Conn.URL != "https://www.tests.to" {
+		t.Errorf("expected conn to replace null, but got %+v", config.Get().Conn)
+	}
+}
+
 func TestReadOverlayConfigWrongType(t *testing.T) {
 	t.Parallel()
 
