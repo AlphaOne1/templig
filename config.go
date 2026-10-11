@@ -227,6 +227,11 @@ func (c *Config[T]) readSources() error {
 			}
 		}
 
+		if c.node == nil {
+			// all sources were empty, behave like reading a single empty source
+			return fmt.Errorf("could not parse configuration: %w", io.EOF)
+		}
+
 		decodeErr = c.node.Decode(&c.content)
 
 		// cleanup
@@ -287,6 +292,11 @@ func (c *Config[T]) overlay(r io.Reader) error {
 	}
 
 	additionalConfig, aErr := New[yaml.Node](opts...)
+
+	if errors.Is(aErr, io.EOF) {
+		// an empty source contributes nothing to the merged configuration
+		return nil
+	}
 
 	if aErr != nil {
 		return aErr

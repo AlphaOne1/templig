@@ -5,6 +5,7 @@ package templig_test
 
 import (
 	"bytes"
+	"errors"
 	"testing"
 
 	"go.yaml.in/yaml/v4"
@@ -115,6 +116,124 @@ a: &ref1
 			want:    ``,
 			wantErr: true,
 		},
+		{ // 9
+			name: "null replaced by mapping",
+			a: `
+a:
+b: 1`,
+			b: `
+a:
+    x: 1`,
+			want: `a:
+    x: 1
+b: 1`,
+			wantErr: false,
+		},
+		{ // 10
+			name: "null replaced by sequence",
+			a: `
+a: ~`,
+			b: `
+a:
+    - 1`,
+			want: `a:
+    - 1`,
+			wantErr: false,
+		},
+		{ // 11
+			name: "mapping replaced by null",
+			a: `
+a:
+    x: 1
+b: 1`,
+			b: `
+a: null`,
+			want: `a: null
+b: 1`,
+			wantErr: false,
+		},
+		{ // 12
+			name: "null replaced by alias",
+			a: `
+a: null`,
+			b: `
+r: &r
+    k: 1
+a: *r`,
+			want: `a:
+    k: 1
+r: &r
+    k: 1`,
+			wantErr: false,
+		},
+		{ // 13
+			name: "empty override",
+			a: `
+a: 1`,
+			b:       ``,
+			want:    `a: 1`,
+			wantErr: false,
+		},
+		{ // 14
+			name:    "empty base",
+			a:       `# only a comment`,
+			b:       `a: 1`,
+			want:    `a: 1`,
+			wantErr: false,
+		},
+		{ // 15
+			name:    "keys of different type",
+			a:       `1: a`,
+			b:       `"1": b`,
+			want:    "1: a\n\"1\": b",
+			wantErr: false,
+		},
+		{ // 16
+			name:    "int keys in different notation",
+			a:       `1: a`,
+			b:       `0x1: b`,
+			want:    `1: b`,
+			wantErr: false,
+		},
+		{ // 17
+			name:    "bool keys in different notation",
+			a:       `true: a`,
+			b:       `True: b`,
+			want:    `true: b`,
+			wantErr: false,
+		},
+		{ // 18
+			name: "alias as key",
+			a:    `a: 1`,
+			b: `
+k: &k a
+*k : 2`,
+			want:    "a: 2\nk: &k a",
+			wantErr: false,
+		},
+		{ // 19
+			name:    "non-scalar keys are not matched",
+			a:       `[x]: 1`,
+			b:       `[x]: 2`,
+			want:    "? [x]\n: 1\n? [x]\n: 2",
+			wantErr: false,
+		},
+		{ // 20
+			name:    "undecodable keys compared by tag and value",
+			a:       `!!int abc: 1`,
+			b:       `!!int abc: 2`,
+			want:    `!!int abc: 2`,
+			wantErr: false,
+		},
+		{ // 21
+			name: "kind mismatch through alias",
+			a:    `a: [1]`,
+			b: `
+r: &r {k: 1}
+a: *r`,
+			want:    ``,
+			wantErr: true,
+		},
 	}
 
 	for testNum, test := range tests {
@@ -198,11 +317,12 @@ func TestStrangeDocumentNodes(t *testing.T) {
 func TestUnknownNodeKind(t *testing.T) {
 	t.Parallel()
 
+	// Kind 0 denotes an empty node, so an otherwise undefined kind is used
 	a := yaml.Node{
-		Kind: 0,
+		Kind: yaml.Kind(255),
 	}
 	b := yaml.Node{
-		Kind: 0,
+		Kind: yaml.Kind(255),
 	}
 
 	res, resErr := templig.MergeYAMLNodes(&a, &b)
@@ -213,5 +333,27 @@ func TestUnknownNodeKind(t *testing.T) {
 
 	if resErr == nil {
 		t.Errorf("expected an error merging unknown node kind")
+	}
+}
+
+func TestAliasWithoutTarget(t *testing.T) {
+	t.Parallel()
+
+	a := yaml.Node{
+		Kind:  yaml.ScalarNode,
+		Value: "a",
+	}
+	b := yaml.Node{
+		Kind: yaml.AliasNode,
+	}
+
+	res, resErr := templig.MergeYAMLNodes(&a, &b)
+
+	if res != nil {
+		t.Errorf("merging an alias without target must produce nil")
+	}
+
+	if !errors.Is(resErr, templig.ErrNodeNil) {
+		t.Errorf("expected ErrNodeNil merging an alias without target, but got %v", resErr)
 	}
 }

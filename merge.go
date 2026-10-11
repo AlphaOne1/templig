@@ -6,6 +6,7 @@ package templig
 import (
 	"errors"
 	"fmt"
+	"reflect"
 
 	"go.yaml.in/yaml/v4"
 )
@@ -42,31 +43,39 @@ func MergeYAMLNodes(nodeA, nodeB *yaml.Node) (*yaml.Node, error) {
 		return nil, ErrNodeNil
 	}
 
-	if nodeA.Kind != nodeB.Kind && nodeA.Kind != yaml.AliasNode && nodeB.Kind != yaml.AliasNode {
+	// an empty node (e.g. from an empty document) does not change the other side
+	if nodeB.Kind == 0 {
+		ret := *nodeA
+
+		return &ret, nil
+	}
+
+	if nodeA.Kind == 0 {
+		ret := *nodeB
+
+		return &ret, nil
+	}
+
+	// aliases are resolved before comparing the kinds of both sides
+	resolvedA := resolveAlias(nodeA)
+	resolvedB := resolveAlias(nodeB)
+
+	if resolvedA == nil || resolvedB == nil {
+		return nil, fmt.Errorf("alias without target: %w", ErrNodeNil)
+	}
+
+	// null replaces and is replaced by any kind of node
+	if isNullNode(resolvedA) || isNullNode(resolvedB) {
+		return copyResolved(nodeB), nil
+	}
+
+	if resolvedA.Kind != resolvedB.Kind {
 		return nil, ErrNodeKindMismatch
 	}
 
-	for nodeB.Kind == yaml.AliasNode {
-		nodeB = nodeB.Alias
-	}
+	nodeB = resolvedB
 
-	var res *yaml.Node
-	var resErr error
-
-	switch nodeA.Kind {
-	case yaml.DocumentNode:
-		res, resErr = mergeDocumentNodes(nodeA, nodeB)
-	case yaml.SequenceNode:
-		res, resErr = mergeSequenceNodes(nodeA, nodeB)
-	case yaml.MappingNode:
-		res, resErr = mergeMappingNodes(nodeA, nodeB)
-	case yaml.ScalarNode:
-		res, resErr = mergeScalarNodes(nodeA, nodeB)
-	case yaml.AliasNode:
-		res, resErr = mergeAliasNodes(nodeA, nodeB)
-	default:
-		resErr = fmt.Errorf("unhandled node type %v: %w", nodeA.Kind, ErrNodeTypeUnhandled)
-	}
+	res, resErr := mergeByKind(nodeA, nodeB)
 
 	if len(nodeA.Anchor) > 0 {
 		if len(nodeB.Anchor) > 0 && nodeA.Anchor != nodeB.Anchor {
@@ -81,6 +90,57 @@ func MergeYAMLNodes(nodeA, nodeB *yaml.Node) (*yaml.Node, error) {
 	}
 
 	return res, resErr
+}
+
+// mergeByKind dispatches the merge of nodeA and nodeB to the function handling the kind of nodeA.
+func mergeByKind(nodeA, nodeB *yaml.Node) (*yaml.Node, error) {
+	switch nodeA.Kind {
+	case yaml.DocumentNode:
+		return mergeDocumentNodes(nodeA, nodeB)
+	case yaml.SequenceNode:
+		return mergeSequenceNodes(nodeA, nodeB)
+	case yaml.MappingNode:
+		return mergeMappingNodes(nodeA, nodeB)
+	case yaml.ScalarNode:
+		return mergeScalarNodes(nodeA, nodeB)
+	case yaml.AliasNode:
+		return mergeAliasNodes(nodeA, nodeB)
+	default:
+		return nil, fmt.Errorf("unhandled node type %v: %w", nodeA.Kind, ErrNodeTypeUnhandled)
+	}
+}
+
+// resolveAlias follows the alias chain of node and returns the first non-alias node.
+func resolveAlias(node *yaml.Node) *yaml.Node {
+	for node != nil && node.Kind == yaml.AliasNode {
+		node = node.Alias
+	}
+
+	return node
+}
+
+// isNullNode reports whether node "is" or "is an alias to", a null scalar.
+func isNullNode(node *yaml.Node) bool {
+	node = resolveAlias(node)
+
+	return node != nil && node.Kind == yaml.ScalarNode && node.ShortTag() == "!!null"
+}
+
+// copyResolved returns a copy of the node, resolving it first if it is an alias.
+// Like in mergeAliasNodes, the anchor of a resolved alias target is not copied.
+func copyResolved(node *yaml.Node) *yaml.Node {
+	resolved := resolveAlias(node)
+
+	if resolved == nil || resolved == node {
+		ret := *node
+
+		return &ret
+	}
+
+	ret := *resolved
+	ret.Anchor = ""
+
+	return &ret
 }
 
 func mergeAliasNodes(nodeA, nodeB *yaml.Node) (*yaml.Node, error) {
@@ -157,18 +217,45 @@ func mergeSequenceNodes(nodeA, nodeB *yaml.Node) (*yaml.Node, error) {
 	return &ret, nil
 }
 
+// rawScalarKey is the fallback representation of a scalar key that cannot be decoded
+// into a comparable value.
+type rawScalarKey struct {
+	tag   string
+	value string
+}
+
+// scalarKeyValue returns a comparable representation of a mapping key, resolving aliases.
+// Two keys are equal if their decoded values are of the same type and value, e.g. `1` and `0x1`,
+// but not `1` and `"1"`. The second return value is false for keys that are not scalars,
+// as those cannot be decoded into Go types anyway.
+func scalarKeyValue(node *yaml.Node) (any, bool) {
+	node = resolveAlias(node)
+
+	if node == nil || node.Kind != yaml.ScalarNode {
+		return nil, false
+	}
+
+	var value any
+
+	// the comparability check only guards against panics on ==, scalars decode to comparable types
+	if err := node.Decode(&value); err != nil || (value != nil && !reflect.TypeOf(value).Comparable()) {
+		return rawScalarKey{tag: node.ShortTag(), value: node.Value}, true
+	}
+
+	return value, true
+}
+
 func mergeAddValue(node, key, value *yaml.Node) error {
 	var keyIndex int
 	var valueIndex int
 
-	for i := 0; i+1 < len(node.Content); i += 2 {
+	keyValue, keyIsScalar := scalarKeyValue(key)
+
+	for i := 0; keyIsScalar && i+1 < len(node.Content); i += 2 {
 		keyIndex = i
 		valueIndex = i + 1
 
-		if node.Content[keyIndex].Kind == yaml.ScalarNode &&
-			key.Kind == yaml.ScalarNode &&
-			node.Content[keyIndex].Value == key.Value {
-
+		if nodeKeyValue, ok := scalarKeyValue(node.Content[keyIndex]); ok && nodeKeyValue == keyValue {
 			merged, mergedErr := MergeYAMLNodes(node.Content[valueIndex], value)
 
 			if mergedErr == nil {

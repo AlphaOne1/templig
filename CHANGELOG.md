@@ -2,6 +2,19 @@
      SPDX-License-Identifier: MPL-2.0
 -->
 
+Release 0.10.3
+==============
+
+- empty configuration sources are skipped when overlaying, instead of failing;
+  if all sources are empty, an error is still reported
+- `null` values can be overwritten by and overwrite values of any kind when
+  merging
+- mapping keys are compared by type and value when merging, e.g. `1` and `0x1`
+  are the same key, `1` and `"1"` are not; aliases used as keys are resolved
+- aliases are resolved before checking for kind mismatches when merging, aliases
+  without target are reported as error instead of causing a panic
+- update dependencies
+
 Release 0.10.2
 ==============
 
